@@ -1,0 +1,33 @@
+#VRML_SIM R2021a utf8
+# license: Creative Commons Attribution 4.0 International License.
+# license url: https://creativecommons.org/licenses/by/4.0/legalcode
+# documentation url: https://www.cyberbotics.com/doc/guide/object-chairs
+# 
+
+PROTO UltrasoundDistanceSensor [
+  field SFVec3f translation  0 0 0
+  field SFRotation rotation     0 1 0 0
+  field SFColor colour 0.184314 0.596078 0.847059
+  field SFString name "ds_sensor"
+]
+{
+  DistanceSensor {
+    translation IS translation
+    rotation IS rotation
+    lookupTable [0 0 1.5,
+                4 4000 1.5]
+    children [
+      Shape {
+        appearance PBRAppearance {
+          baseColor IS colour
+          roughness 1
+          metalness 0
+        }
+        geometry Box {
+          size 0.015 0.02 0.045
+        }
+      }
+    ]
+    name IS name
+  }
+}
