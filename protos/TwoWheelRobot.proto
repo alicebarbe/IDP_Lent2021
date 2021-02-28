@@ -93,7 +93,7 @@ Robot {
       }
     }
     DEF DS UltrasoundDistanceSensor{
-      name "ds_foreward"
+      name "ds_forward"
       translation 0.00 0 0.1
       rotation 0 1 0 -1.57
       colour 0.184314 0.596078 0.847059

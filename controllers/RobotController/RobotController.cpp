@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
   rightMotor->setVelocity(35 * RPM_TO_RAD_S);
 
   // setup distance sensors
-  DistanceSensor* leftDistanceSensor = robot->getDistanceSensor("ds_right");
+  DistanceSensor* leftDistanceSensor = robot->getDistanceSensor("ds_forward");
   leftDistanceSensor->enable(timeStep);
 
   // setup emitter and transmitter for communication - note you need two robots to test this
