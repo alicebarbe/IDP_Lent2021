@@ -186,8 +186,10 @@ Robot {
       }
     }
     DEF DS_RIGHT DistanceSensor {
-      translation -0.03 0 0.1
-      rotation 0 1 0 -1.87079
+      translation 0 0 0.1
+      rotation -0.03 0.9995 0 -1.570796
+      type "generic"
+      lookupTable[ 0 0 0,2.4 2.4 0]
       children [
         Shape {
           appearance PBRAppearance {
@@ -209,6 +211,6 @@ Robot {
     density -1
     mass 1
   }
-  controller "epuck_go_forward"
+  controller "my_controller"
 }
 }

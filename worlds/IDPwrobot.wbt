@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.3876312822803314 -0.8636717466439667 -0.3222004082037537 4.975780143968444
-  position 2.5282915715995395 1.9378310100974483 1.1420093957681876
+  orientation -0.2977978304287727 -0.9448950349190988 -0.13597729655038437 1.2493152244177
+  position -3.898402693157574 1.804760962249111 1.9895911991630715
 }
 Background {
   skyColor [
@@ -140,6 +140,10 @@ DEF WALL_4 Solid {
 TexturedBackgroundLight {
   texture "empty_office"
 }
-TwoWheelRobot {
-  translation 0 0.05 0
+SampleRobot {
+  translation 0 0.05 0.4
+}
+SampleRobot {
+  translation 0.02 0.05 -0.4
+  rotation 0 1 0 3.14159
 }

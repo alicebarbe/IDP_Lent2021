@@ -25,6 +25,7 @@ webots_catkin_ws
 *.ipdb
 *.pdb
 *.iobj
+*.obj
 
 
 # Packages
