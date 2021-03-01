@@ -1,3 +1,4 @@
+
 // File:          my_controller.cpp
 // Date:
 // Description:
@@ -13,6 +14,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <CommunicationClient.hpp>
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;

@@ -1,3 +1,4 @@
+
 #include <webots/Robot.hpp>
 #include <webots/DistanceSensor.hpp>
 #include <webots/LightSensor.hpp>
@@ -18,7 +19,7 @@ using namespace std;
 DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
   DistanceSensor* ds = robot->getDistanceSensor(name);
   ds->enable(robot->getBasicTimeStep());  // I dont like this
-  return ds
+  return ds;
 }
 
 /**
