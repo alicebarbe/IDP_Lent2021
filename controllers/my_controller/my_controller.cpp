@@ -96,9 +96,9 @@ bool scan_for_blocks(){
        
       else if(!BLOCK_DETECTED){
       motor1->setPosition(INFINITY);
-      motor1->setVelocity(-0.5);
+      motor1->setVelocity(0.5);
       motor2->setPosition(INFINITY);
-      motor2->setVelocity(0.5);
+      motor2->setVelocity(-0.5);
       }
 
     // Process sensor data here.
