@@ -154,6 +154,11 @@
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Supervisor.cpp" />
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\TouchSensor.cpp" />
     <ClCompile Include="my_controller.cpp" />
+    <ClCompile Include="Sensors.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Sensors.hpp" />
+    <ClInclude Include="SimulationParameters.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
