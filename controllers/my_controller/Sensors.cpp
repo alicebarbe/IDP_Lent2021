@@ -3,7 +3,7 @@
 #include <webots/DistanceSensor.hpp>
 #include <webots/LightSensor.hpp>
 
-#include <Sensors.hpp>
+#include "Sensors.hpp"
 
 using namespace std;
 
@@ -30,8 +30,8 @@ DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
 * @returns distance (int) the distance measurement in millimeters
 */
 
-int getDistanceMeasurement(DistanceSensor* ds) {
-  int measurement = ds->getValue();
+double getDistanceMeasurement(DistanceSensor* ds) {
+  double measurement = ds->getValue();
   return ds->getValue();
 }
 

@@ -14,7 +14,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
-#include <CommunicationClient.hpp>
+#include "CommunicationClient.hpp"
+#include "Sensors.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -30,7 +31,8 @@ double blockdistance = 0;
   Robot *robot = new Robot();
   Motor *motor1 = robot->getMotor("wheel1");
   Motor *motor2 = robot->getMotor("wheel2");
-  DistanceSensor *ds1 = robot->getDistanceSensor("ds_right");
+
+ // DistanceSensor *ds1 = robot->getDistanceSensor("ds_right");
 
 
 // This is the main program of your controller.
@@ -47,7 +49,8 @@ int main(int argc, char **argv) {
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
      
-     ds1->enable(timeStep);
+     //ds1->enable(timeStep);
+   DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
   
 
   // You should insert a getDevice-like function in order to get the
@@ -61,7 +64,7 @@ int main(int argc, char **argv) {
   while (robot->step(timeStep) != -1) {
     // Read the sensors:
     oldval1 = val1;
-    val1 = ds1->getValue();
+    val1 = getDistanceMeasurement(ds1);
     // Enter here functions to read sensor data, like:
    
     if(!BLOCK_DETECTED){

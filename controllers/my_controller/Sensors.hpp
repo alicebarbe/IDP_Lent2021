@@ -7,4 +7,4 @@ using namespace webots;
 using namespace std;
 
 DistanceSensor* initDistanceSensor(Robot* robot, const char* name);
-int getDistanceMeasurement(DistanceSensor* ds);
+double getDistanceMeasurement(DistanceSensor* ds);
