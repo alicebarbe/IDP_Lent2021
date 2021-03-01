@@ -19,7 +19,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.3876312822803314 -0.8636717466439667 -0.3222004082037537 4.975780143968444
-  position 2.690415850810968 2.064662076430586 1.2157223180824568
+  position 2.5282915715995395 1.9378310100974483 1.1420093957681876
 }
 Background {
   skyColor [
@@ -141,4 +141,5 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 TwoWheelRobot {
+  translation 0 0.05 0
 }

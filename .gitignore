@@ -21,6 +21,12 @@ webots_catkin_ws
 *.pyc
 *.gch
 
+# Incremental Link-Time Code Generation
+*.ipdb
+*.pdb
+*.iobj
+
+
 # Packages
 *.7z
 *.bz2

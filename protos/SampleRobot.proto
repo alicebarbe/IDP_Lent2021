@@ -1,0 +1,214 @@
+PROTO SampleRobot [
+  field SFVec3f    translation  0 0 0
+  field SFRotation rotation     0 1 0 0
+  field SFColor colour 1 0 0 
+]
+{
+Robot {
+  translation IS translation
+  rotation IS rotation
+  children [
+    Compass {
+      translation 0 0.03 0.05
+      children [
+        Shape {
+          geometry Box {
+            size 0.02 0.02 0.02
+          }
+        }
+      ]
+    }
+    GPS {
+      translation 0 0.03 -0.02
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 1 0.5 1
+          }
+          geometry Sphere {
+            radius 0.02
+          }
+        }
+      ]
+    }
+    DEF POLE HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.025 0 0.12
+      }
+      device [
+        RotationalMotor {
+          name "gripper motor"
+          maxTorque 100
+        }
+      ]
+      endPoint Solid {
+        translation 0.025000000000000015 0 0.16
+        children [
+          Solid {
+            children [
+              LightSensor {
+                translation -0.01 0 0.02
+                rotation 0 0 1 1.5707996938995747
+                children [
+                  Shape {
+                    appearance PBRAppearance {
+                      baseColor 1 0 1
+                    }
+                    geometry Sphere {
+                      radius 0.01
+                    }
+                  }
+                ]
+                name "light sensor(1)"
+                recognitionColors [
+                  0 0 0
+                ]
+              }
+              LightSensor {
+                translation -0.01 0 -0.01
+                rotation 0 0 1 1.5707996938995747
+                children [
+                  Shape {
+                    appearance PBRAppearance {
+                      baseColor 1 0 1
+                    }
+                    geometry Sphere {
+                      radius 0.01
+                    }
+                  }
+                ]
+                name "light sensor(2)"
+                recognitionColors [
+                  0 0 0
+                ]
+              }
+              DEF BOX Shape {
+                appearance PBRAppearance {
+                  baseColor 0.2 1 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.02 0.07 0.1
+                }
+              }
+            ]
+            boundingObject USE BOX
+          }
+        ]
+        name "solid(3)"
+        boundingObject USE BOX
+      }
+    }
+    Camera {
+      translation 0 0 0.1
+      width 1
+      height 1
+    }
+    Solid {
+      translation 0 -0.03 0
+      children [
+        Shape {
+          geometry DEF CASTOR_BALL Sphere {
+            radius 0.01
+          }
+        }
+      ]
+      name "solid(2)"
+      contactMaterial "slippy"
+      boundingObject USE CASTOR_BALL
+      physics Physics {
+      }
+    }
+    DEF BODY Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.1 0.05 0.2
+      }
+    }
+    DEF WHEEL1 HingeJoint {
+      jointParameters HingeJointParameters {
+        anchor 0.06 0 0.05
+      }
+      device [
+        RotationalMotor {
+          name "wheel1"
+          maxTorque 100
+        }
+      ]
+      endPoint Solid {
+        translation 0.059999996289102686 2.668021376114589e-07 0.04999956739109729
+        rotation -0.001913720650757419 0.0019022860487794384 0.9999963594839032 1.5707754109238277
+        children [
+          DEF WHEEL Shape {
+            appearance PBRAppearance {
+              baseColor 0.305882 0.898039 0.25098
+              roughness 1
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.04
+              subdivision 24
+            }
+          }
+        ]
+        boundingObject USE WHEEL
+        physics Physics {
+        }
+      }
+    }
+    DEF WHEEL2 HingeJoint {
+      jointParameters HingeJointParameters {
+        position 9.469952744262251e-12
+        anchor -0.06 0 0.05
+      }
+      device [
+        RotationalMotor {
+          name "wheel2"
+          maxTorque 100
+        }
+      ]
+      endPoint Solid {
+        translation -0.06000006461859908 4.4247839434347776e-07 0.04999960596361961
+        rotation -0.0017105591319500784 0.0016991158697093837 0.9999970934921348 1.5707746782052638
+        children [
+          USE WHEEL
+        ]
+        name "solid(1)"
+        boundingObject USE WHEEL
+        physics Physics {
+        }
+      }
+    }
+    DEF DS_RIGHT DistanceSensor {
+      translation -0.03 0 0.1
+      rotation 0 1 0 -1.87079
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.184314 0.596078 0.847059
+            roughness 1
+            metalness 0
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "ds_right"
+    }
+  ]
+  name "robot(1)"
+  boundingObject USE BODY
+  physics Physics {
+    density -1
+    mass 1
+  }
+  controller "epuck_go_forward"
+}
+}
