@@ -11,6 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <tuple>
 
 #include <webots/Robot.hpp>
 #include <webots/Motor.hpp>
@@ -35,7 +36,7 @@ Robot *robot = new Robot();
 Motor *motor1 = robot->getMotor("wheel1");
 Motor *motor2 = robot->getMotor("wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
-LightSensor* ls1 = initLightSensor(robot, "light sensor(1)");
+tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
     // Read the sensors:
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
-    cout << getLightMeasurement(ls1) << endl;
+    cout << "Redness: " << getLightMeasurement(colour_sensor) << endl;
     // Enter here functions to read sensor data, like:
    
     if(!BLOCK_DETECTED){

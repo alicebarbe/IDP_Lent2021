@@ -1,3 +1,4 @@
+#include <tuple>
 
 #include <webots/Robot.hpp>
 #include <webots/DistanceSensor.hpp>
@@ -6,6 +7,7 @@
 #include "Sensors.hpp"
 
 using namespace webots;
+using namespace std;
 
 /**
 * Initialises and enables the distance sensor. By default the sampling 
@@ -18,7 +20,7 @@ using namespace webots;
 
 DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
   DistanceSensor* ds = robot->getDistanceSensor(name);
-  ds->enable(robot->getBasicTimeStep());  // I dont like this
+  ds->enable(robot->getBasicTimeStep());
   return ds;
 }
 
@@ -28,13 +30,16 @@ DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
 *
 * @param robot (Robot*) a pointer to the robot object
 * @param name (const char*) the name of the light sensor
-* @returns ls (LightSensor*) a pointer to the DistanceSensor object
+* @returns ls (tuple<LightSensor*, LightSensor*>) a tuple containing pointers to the LightSensors [red_sensor, green_sensor]
 */
 
-LightSensor* initLightSensor(Robot* robot, const char* name) {
-  LightSensor* ls = robot->getLightSensor(name);
-  ls->enable(robot->getBasicTimeStep());
-  return ls;
+tuple<LightSensor*, LightSensor*> initLightSensor(Robot* robot, const char* red_sensor, const char* green_sensor) {
+  LightSensor* red_ls = robot->getLightSensor(red_sensor);
+  red_ls->enable(robot->getBasicTimeStep());
+  LightSensor* green_ls = robot->getLightSensor(green_sensor);
+  green_ls->enable(robot->getBasicTimeStep());
+
+  return tuple<LightSensor*, LightSensor*>(red_ls, green_ls);
 }
 
 /**
@@ -50,15 +55,18 @@ double getDistanceMeasurement(DistanceSensor* ds) {
 }
 
 /**
-* Simulates making a light measurement (analog input) with the
-* ldr wein bridge setup.
+* Simulates making a colour measurement (analog input) with the
+* ldr wein bridge setup. The retured value is the positive for redder 
+* light and negative for greener light. The bias from the analog voltage 
+* has been subtracted.
 *
-* @param ls (LightSensor*) the sensor to read
-* @returns analogValue (int) the 10-bit voltage measurement
+* @param ls (tuple<LightSensor*, LightSensor*>) the sensor to read
+* @returns analogValue (int) the 10-bit voltage measurement from the 
+* differential amplifier, minus the DC bias value
 */
 
-int getLightMeasurement(LightSensor* ls) {
-  return ls->getValue();
+int getLightMeasurement(tuple<LightSensor*, LightSensor*> sensors) {
+  return int(get<0>(sensors)->getValue()) - int(get<1>(sensors)->getValue());
 }
 
 
