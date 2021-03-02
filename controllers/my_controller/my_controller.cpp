@@ -11,6 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <tuple>
 
 #include <webots/Robot.hpp>
 #include <webots/Motor.hpp>
@@ -35,8 +36,9 @@ Robot *robot = new Robot();
 Motor *motor1 = robot->getMotor("wheel1");
 Motor *motor2 = robot->getMotor("wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
-LightSensor* ls1 = initLightSensor(robot, "light sensor(1)");
+
 GPS* gps = initGPS(robot, "gps");
+tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its

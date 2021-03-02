@@ -26,6 +26,7 @@ webots_catkin_ws
 *.pdb
 *.iobj
 *.obj
+*.tlog
 
 
 # Packages
@@ -62,6 +63,7 @@ Thumbs.db
 
 # Webots generated files
 *.cache
+*.wbproj
 
 # IDE files
 .vs
