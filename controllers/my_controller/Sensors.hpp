@@ -1,10 +1,12 @@
 
+#pragma once
+
 #include <webots/Robot.hpp>
 #include <webots/DistanceSensor.hpp>
 #include <webots/LightSensor.hpp>
 
-using namespace webots;
-using namespace std;
+webots::DistanceSensor* initDistanceSensor(webots::Robot* robot, const char* name);
+webots::LightSensor* initLightSensor(webots::Robot* robot, const char* name);
 
-DistanceSensor* initDistanceSensor(Robot* robot, const char* name);
-double getDistanceMeasurement(DistanceSensor* ds);
+double getDistanceMeasurement(webots:: DistanceSensor* ds);
+int getLightMeasurement(webots::LightSensor* ls);

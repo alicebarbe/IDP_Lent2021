@@ -50,6 +50,7 @@ Robot {
               LightSensor {
                 translation -0.01 0 0.02
                 rotation 0 0 1 1.5707996938995747
+                lookupTable [0 0 0, 10 1023 0]
                 children [
                   Shape {
                     appearance PBRAppearance {
@@ -68,6 +69,7 @@ Robot {
               LightSensor {
                 translation -0.01 0 -0.01
                 rotation 0 0 1 1.5707996938995747
+                lookupTable [0 0 0, 10 1023 0]
                 children [
                   Shape {
                     appearance PBRAppearance {

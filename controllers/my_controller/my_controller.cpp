@@ -8,17 +8,20 @@
 // You may need to add webots include files such as
 // <webots/DistanceSensor.hpp>, <webots/Motor.hpp>, etc.
 // and/or to add some other includes
-#include <webots/Robot.hpp>
-#include <webots/Motor.hpp>
-#include <webots/DistanceSensor.hpp>
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+
+#include <webots/Robot.hpp>
+#include <webots/Motor.hpp>
+#include <webots/DistanceSensor.hpp>
+
 #include "CommunicationClient.hpp"
 #include "Sensors.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
+using namespace std;
 
 bool scan_for_blocks();
 void drive_to_block(void);
@@ -28,12 +31,11 @@ bool BLOCK_DETECTED = 0;
 double val1 = 0;
 static double oldval1 = 0;
 double blockdistance = 0;
-  Robot *robot = new Robot();
-  Motor *motor1 = robot->getMotor("wheel1");
-  Motor *motor2 = robot->getMotor("wheel2");
-
- // DistanceSensor *ds1 = robot->getDistanceSensor("ds_right");
-
+Robot *robot = new Robot();
+Motor *motor1 = robot->getMotor("wheel1");
+Motor *motor2 = robot->getMotor("wheel2");
+DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
+LightSensor* ls1 = initLightSensor(robot, "light sensor(1)");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -48,10 +50,6 @@ int main(int argc, char **argv) {
 
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
-     
-     //ds1->enable(timeStep);
-   DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
-  
 
   // You should insert a getDevice-like function in order to get the
   // instance of a device of the robot. Something like:
@@ -65,6 +63,7 @@ int main(int argc, char **argv) {
     // Read the sensors:
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
+    cout << getLightMeasurement(ls1) << endl;
     // Enter here functions to read sensor data, like:
    
     if(!BLOCK_DETECTED){
@@ -81,60 +80,52 @@ int main(int argc, char **argv) {
 }
 
 bool scan_for_blocks(){ 
-     static char i = 0;
-     static bool SENSORHEATUP = 0;
+  static char i = 0;
+  static bool SENSORHEATUP = 0;
      
   
-       if (i<3){
-         SENSORHEATUP = 1;
-         i+=1;}
-       else{SENSORHEATUP = 0;}
+  if (i<3){
+    SENSORHEATUP = 1;
+    i+=1;}
+  else{SENSORHEATUP = 0;}
        
 
-       if(std::abs(val1-oldval1) > 0.05 && !SENSORHEATUP)
-       {
-         motor1->setVelocity(0);
-         motor2->setVelocity(0);
-         BLOCK_DETECTED = 1;
-         blockdistance = val1;
-        }
+  if(std::abs(val1-oldval1) > 0.05 && !SENSORHEATUP)
+  {
+    motor1->setVelocity(0);
+    motor2->setVelocity(0);
+    BLOCK_DETECTED = 1;
+    blockdistance = val1;
+  }
        
-      else if(!BLOCK_DETECTED){
-      motor1->setPosition(INFINITY);
-      motor1->setVelocity(0.5);
-      motor2->setPosition(INFINITY);
-      motor2->setVelocity(-0.5);
-      }
+  else if(!BLOCK_DETECTED){
+    motor1->setPosition(INFINITY);
+    motor1->setVelocity(0.5);
+    motor2->setPosition(INFINITY);
+    motor2->setVelocity(-0.5);
+  }
 
-    // Process sensor data here.
-
-    // Enter here functions to send actuator commands, like:
-
-      
-      oldval1 = val1;
-      return(BLOCK_DETECTED);
-     }
+  oldval1 = val1;
+  return(BLOCK_DETECTED);
+}
      
-    void drive_to_block(){
-    
-   
-     if(val1-blockdistance > 0.1){
-     motor1->setPosition(INFINITY);
-     motor2->setPosition(INFINITY);
-     motor1->setVelocity(0.5);
-     motor2->setVelocity(-0.5);
-     }
-     else if(blockdistance > 0.05){
-         motor1->setPosition(INFINITY);
-         motor2->setPosition(INFINITY);
-         motor1->setVelocity(6);
-         motor2->setVelocity(6);
-         blockdistance = val1;
-         }
-      else {
-      motor1->setVelocity(0);
-      motor2->setVelocity(0);
-      blockdistance = val1;
-      }
-     
-     }
+void drive_to_block(){
+  if(val1-blockdistance > 0.1){
+    motor1->setPosition(INFINITY);
+    motor2->setPosition(INFINITY);
+    motor1->setVelocity(0.5);
+    motor2->setVelocity(-0.5);
+  }
+  else if(blockdistance > 0.05){
+    motor1->setPosition(INFINITY);
+    motor2->setPosition(INFINITY);
+    motor1->setVelocity(6);
+    motor2->setVelocity(6);
+    blockdistance = val1;
+  }
+  else {
+    motor1->setVelocity(0);
+    motor2->setVelocity(0);
+    blockdistance = val1;
+  }
+}
