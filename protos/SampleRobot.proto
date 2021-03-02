@@ -20,6 +20,7 @@ Robot {
     }
     GPS {
       translation 0 0.03 -0.02
+      name "gps"
       children [
         Shape {
           appearance PBRAppearance {

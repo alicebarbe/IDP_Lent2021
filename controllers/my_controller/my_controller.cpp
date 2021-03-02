@@ -36,6 +36,7 @@ Motor *motor1 = robot->getMotor("wheel1");
 Motor *motor2 = robot->getMotor("wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 LightSensor* ls1 = initLightSensor(robot, "light sensor(1)");
+GPS* gps = initGPS(robot, "gps");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -63,7 +64,8 @@ int main(int argc, char **argv) {
     // Read the sensors:
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
-    cout << getLightMeasurement(ls1) << endl;
+    //cout << getLightMeasurement(ls1) << endl;
+    cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
     // Enter here functions to read sensor data, like:
    
     if(!BLOCK_DETECTED){
