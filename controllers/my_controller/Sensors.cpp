@@ -5,7 +5,7 @@
 
 #include "Sensors.hpp"
 
-using namespace std;
+using namespace webots;
 
 /**
 * Initialises and enables the distance sensor. By default the sampling 
@@ -23,6 +23,21 @@ DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
 }
 
 /**
+* Initialises and enables the light sensor. By default the sampling
+* period is equal to the simualion timestep.
+*
+* @param robot (Robot*) a pointer to the robot object
+* @param name (const char*) the name of the light sensor
+* @returns ls (LightSensor*) a pointer to the DistanceSensor object
+*/
+
+LightSensor* initLightSensor(Robot* robot, const char* name) {
+  LightSensor* ls = robot->getLightSensor(name);
+  ls->enable(robot->getBasicTimeStep());
+  return ls;
+}
+
+/**
 * Simulates making a distance measurement with the 
 * ultrasonic distance sensor
 * 
@@ -31,9 +46,22 @@ DistanceSensor* initDistanceSensor(Robot* robot, const char* name) {
 */
 
 double getDistanceMeasurement(DistanceSensor* ds) {
-  double measurement = ds->getValue();
   return ds->getValue();
 }
+
+/**
+* Simulates making a light measurement (analog input) with the
+* ldr wein bridge setup.
+*
+* @param ls (LightSensor*) the sensor to read
+* @returns analogValue (int) the 10-bit voltage measurement
+*/
+
+int getLightMeasurement(LightSensor* ls) {
+  return ls->getValue();
+}
+
+
 
 
 
