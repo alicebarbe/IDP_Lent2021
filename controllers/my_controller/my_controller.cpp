@@ -41,30 +41,15 @@ DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
+Receiver* receiver = initReceiver(robot, "receiver");
+Emitter* emitter = initEmitter(robot, "emitter");
 
 std::tuple<double, double> target_position(-1.09, -0.773);
 
-// This is the main program of your controller.
-// It creates an instance of your Robot instance, launches its
-// function(s) and destroys it at the end of the execution.
-// Note that only one instance of Robot should be created in
-// a controller program.
-// The arguments of the main function can be specified by the
-// "controllerArgs" field of the Robot node
 int main(int argc, char **argv) {
-  // create the Robot instance.
-
-
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
 
-  // You should insert a getDevice-like function in order to get the
-  // instance of a device of the robot. Something like:
-  
-  
-  //std :: cout << "oldval1:" << oldval1 << std::endl;
-      
-  // Main loop:
   // - perform simulation steps until Webots is stopping the controller
   while (robot->step(timeStep) != -1) {
     // Read the sensors:
@@ -82,15 +67,26 @@ int main(int argc, char **argv) {
     //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
     //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
     // Enter here functions to read sensor data, like:
-   
-    //if(!BLOCK_DETECTED){
-      //scan_for_blocks();}
-      //else{
-      //drive_to_block();}
+    
+    /*
+    if(!BLOCK_DETECTED){
+      scan_for_blocks();}
+    else {
+        static bool i = 0;
+        if (i == 0) {
+            emitData(emitter, "block found", 12);
+            i++;
+            }   
+        drive_to_block();
+         }
+    char* received_data = receiveData(receiver);
+    if(received_data){
+        string data_string(received_data);
+        cout << data_string << endl;
+    }
       
   };
-
-  // Enter here exit cleanup code.
+  */
 
   delete robot;
   return 0;
