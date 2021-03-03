@@ -14,3 +14,13 @@ GPS* initGPS(Robot* robot, const char* name) {							//initialises GPS module fo
 const double* getlocation(GPS* gps) {
 	return gps->getValues();
 }
+
+Compass* initCompass(Robot* robot, const char* name) {
+	Compass* compass = robot->getCompass(name);
+	compass->enable(robot->getBasicTimeStep());
+	return compass;
+}
+
+const double* getDirection(Compass* compass) {
+	return compass->getValues();
+}
