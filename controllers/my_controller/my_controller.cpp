@@ -38,6 +38,7 @@ Motor *motor2 = robot->getMotor("wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 
 GPS* gps = initGPS(robot, "gps");
+Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
 
 // This is the main program of your controller.
@@ -67,13 +68,14 @@ int main(int argc, char **argv) {
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
     //cout << getLightMeasurement(ls1) << endl;
-    cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
+    //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
+    cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
     // Enter here functions to read sensor data, like:
    
-    if(!BLOCK_DETECTED){
-      scan_for_blocks();}
-      else{
-      drive_to_block();}
+    //if(!BLOCK_DETECTED){
+      //scan_for_blocks();}
+      //else{
+      //drive_to_block();}
       
   };
 

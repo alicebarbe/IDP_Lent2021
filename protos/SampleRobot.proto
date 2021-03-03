@@ -10,6 +10,8 @@ Robot {
   children [
     Compass {
       translation 0 0.03 0.05
+     
+      name "compass"
       children [
         Shape {
           geometry Box {
