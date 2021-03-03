@@ -32,6 +32,20 @@ Robot {
         }
       ]
     }
+    COMPASS {
+        translation 0 0.03 -0.04
+        name "compass"
+        children [
+          Shape {
+            appearance PBRAppearance {
+            baseColor 1 0.5 1
+            }
+            geometry Sphere {
+            radius 0.02
+            }
+          }
+        ]
+    }
     DEF POLE HingeJoint {
       jointParameters HingeJointParameters {
         axis 0 1 0
