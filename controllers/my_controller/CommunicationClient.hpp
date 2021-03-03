@@ -4,3 +4,4 @@
 #include <webots/GPS.hpp>
 
 webots::GPS* initGPS(webots::Robot* robot, const char* name);
+const double* getlocation(webots::GPS* gps);
