@@ -19,6 +19,8 @@
 
 #include "CommunicationClient.hpp"
 #include "Sensors.hpp"
+#include "Movement.hpp"
+#include "Motors.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -33,13 +35,14 @@ double val1 = 0;
 static double oldval1 = 0;
 double blockdistance = 0;
 Robot *robot = new Robot();
-Motor *motor1 = robot->getMotor("wheel1");
-Motor *motor2 = robot->getMotor("wheel2");
+tuple<Motor*, Motor*> motors = initMotors(robot, "wheel1", "wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
+
+std::tuple<double, double> target_position(-1.09, -0.773);
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -67,9 +70,17 @@ int main(int argc, char **argv) {
     // Read the sensors:
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
+
+    double bearing = getBearing(getDirection(compass));
+    const double* pos = getlocation(gps);
+
+    tuple<double, double> position(pos[0], pos[2]);
+    tuple<double, double> motor_speeds = moveToPosition(target_position, position, bearing);
+    setMotorVelocity(motors, motor_speeds);
+
     //cout << getLightMeasurement(ls1) << endl;
     //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
-    cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
+    //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
     // Enter here functions to read sensor data, like:
    
     //if(!BLOCK_DETECTED){
@@ -85,6 +96,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+
 bool scan_for_blocks(){ 
   static char i = 0;
   static bool SENSORHEATUP = 0;
@@ -98,17 +110,13 @@ bool scan_for_blocks(){
 
   if(std::abs(val1-oldval1) > 0.05 && !SENSORHEATUP)
   {
-    motor1->setVelocity(0);
-    motor2->setVelocity(0);
+    setMotorVelocity(motors, tuple<double, double>(0.0, -0.0));
     BLOCK_DETECTED = 1;
     blockdistance = val1;
   }
        
   else if(!BLOCK_DETECTED){
-    motor1->setPosition(INFINITY);
-    motor1->setVelocity(0.5);
-    motor2->setPosition(INFINITY);
-    motor2->setVelocity(-0.5);
+    setMotorVelocity(motors, tuple<double, double>(0.5, -0.5));
   }
 
   oldval1 = val1;
@@ -117,21 +125,15 @@ bool scan_for_blocks(){
      
 void drive_to_block(){
   if(val1-blockdistance > 0.1){
-    motor1->setPosition(INFINITY);
-    motor2->setPosition(INFINITY);
-    motor1->setVelocity(0.5);
-    motor2->setVelocity(-0.5);
+    setMotorVelocity(motors, tuple<double, double>(0.5, -0.5));
   }
   else if(blockdistance > 0.05){
-    motor1->setPosition(INFINITY);
-    motor2->setPosition(INFINITY);
-    motor1->setVelocity(6);
-    motor2->setVelocity(6);
+    setMotorVelocity(motors, tuple<double, double>(6.0, 6.0));
     blockdistance = val1;
   }
   else {
-    motor1->setVelocity(0);
-    motor2->setVelocity(0);
+    setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
     blockdistance = val1;
   }
 }
+

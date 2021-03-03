@@ -10,9 +10,10 @@ struct PIDGains {
   double moveThresh;
 };
 
-void moveToPosition(std::tuple<webots::Motor*, webots::Motor*> motors, std::tuple<double, double> position);
-void turnToBearing(std::tuple<webots::Motor*, webots::Motor*> motors, double bearing);
+std::tuple<double, double> moveToPosition(std::tuple<double, double> position, std::tuple<double, double> current_position, double current_bearing);
+double turnToBearing(double bearing, double current_bearing);
 
 //utility functions
 double getBearingDifference(double bearing_one, double bearing_two);
-double getPIDOutput(double setpoint, double current_var, PIDGains gains);
+double getPIDOutput(double error, PIDGains gains);
+double getBearing(const double* vector);
