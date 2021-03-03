@@ -10,7 +10,6 @@ Robot {
   children [
     Compass {
       translation 0 0.03 0.05
-     
       name "compass"
       children [
         Shape {
@@ -210,6 +209,16 @@ Robot {
         }
       ]
       name "ds_right"
+    }
+    DEF emitter Emitter{
+    name "emitter"
+    type "serial"
+    byteSize 8
+    }
+    DEF receiver Receiver{
+    name  "receiver"
+    type "serial"
+    byteSize 8
     }
   ]
   name "robot(1)"

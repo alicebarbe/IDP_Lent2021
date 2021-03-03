@@ -40,6 +40,8 @@ DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
+Receiver* receiver = initReceiver(robot, "receiver");
+Emitter* emitter = initEmitter(robot, "emitter");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -69,13 +71,24 @@ int main(int argc, char **argv) {
     val1 = getDistanceMeasurement(ds1);
     //cout << getLightMeasurement(ls1) << endl;
     //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
-    cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
+    //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
     // Enter here functions to read sensor data, like:
    
-    //if(!BLOCK_DETECTED){
-      //scan_for_blocks();}
-      //else{
-      //drive_to_block();}
+    if(!BLOCK_DETECTED){
+      scan_for_blocks();}
+    else {
+        static bool i = 0;
+        if (i == 0) {
+            emitData(emitter, "block found", 12);
+            i++;
+            }   
+        drive_to_block();
+         }
+    char* received_data = receiveData(receiver);
+    if(received_data){
+        string data_string(received_data);
+        cout << data_string << endl;
+    }
       
   };
 
