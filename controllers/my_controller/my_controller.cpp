@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 
     tuple<double, double> position(pos[0], pos[2]);
     tuple<double, double> motor_speeds = moveToPosition(target_position, position, bearing);
-    setMotorVelocity(motors, motor_speeds);
+    setMotorVelocity(motors, motor_speeds);}
 
     //cout << getLightMeasurement(ls1) << endl;
     //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;

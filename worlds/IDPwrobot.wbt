@@ -47,6 +47,9 @@ target {
   translation 1.0798 0.05 -0.2533
   name "target(6)"
 }
+Assembly {
+  rotation 0 0 1 1.5708
+}
 target {
   translation 0.366 0.05 0.3654
   colour 0 1 0
@@ -139,13 +142,4 @@ DEF WALL_4 Solid {
 }
 TexturedBackgroundLight {
   texture "empty_office"
-}
-SampleRobot {
-  hidden rotation_10 -0.0017105590609241064 0.001699115798685154 0.9999970934923771 1.5707746782050194
-  translation 0 0.05 0.4
-}
-SampleRobot {
-  hidden rotation_10 -0.0017105590609240754 0.0016991157986851492 0.9999970934923771 1.5707746782050194
-  translation 0.02 0.05 -0.4
-  rotation 0 1 0 3.14159
 }
