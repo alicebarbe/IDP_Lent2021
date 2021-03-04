@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <tuple>
+#include <vector>
 
 #include <webots/Robot.hpp>
 #include <webots/Motor.hpp>
@@ -44,11 +45,18 @@ tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
-std::tuple<double, double> target_position(-1.09, -0.773);
+vector<tuple<double, double> > target_points = { tuple<double, double>(-0.4, 0.8),
+                                                tuple<double, double>(-0.4, 0.0),
+                                                tuple<double, double>(0.4, 0.0),
+                                                tuple<double, double>(0.4, 0.8) };
+
 
 int main(int argc, char **argv) {
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
+  int i = 0;
+  updateTargetPosition(target_points[i]);
+  i++;
 
   // - perform simulation steps until Webots is stopping the controller
   while (robot->step(timeStep) != -1) {
@@ -56,12 +64,17 @@ int main(int argc, char **argv) {
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
 
-    double bearing = getBearing(getDirection(compass));
+    const double* bearing = getDirection(compass);
     const double* pos = getlocation(gps);
 
     tuple<double, double> position(pos[0], pos[2]);
-    tuple<double, double> motor_speeds = moveToPosition(target_position, position, bearing);
+    tuple<double, double> motor_speeds = moveToPosition(position, bearing);
     setMotorVelocity(motors, motor_speeds);
+    if (hasReachedPosition()) {
+      cout << "Arrived!" << endl;
+      updateTargetPosition(target_points[i]);
+      i = (i+1) % 4;
+    }
 
     //cout << getLightMeasurement(ls1) << endl;
     //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
@@ -84,10 +97,8 @@ int main(int argc, char **argv) {
         string data_string(received_data);
         cout << data_string << endl;
     }
-      
+    */
   };
-  */
-
   delete robot;
   return 0;
 }

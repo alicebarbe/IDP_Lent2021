@@ -8,12 +8,23 @@ struct PIDGains {
   double ki;
   double kd;
   double moveThresh;
+  double integralThresh;
 };
 
-std::tuple<double, double> moveToPosition(std::tuple<double, double> position, std::tuple<double, double> current_position, double current_bearing);
-double turnToBearing(double bearing, double current_bearing);
+struct PIDState {
+  double lastError;
+  double integral;
+};
+
+void updateTargetPosition(std::tuple<double, double> newTarget);
+bool hasReachedPosition();
+std::tuple<double, double> moveToPosition(std::tuple<double, double> currentPosition, const double* currentBearing);
+double turnToBearing(double bearing, double currentBearing);
 
 //utility functions
-double getBearingDifference(double bearing_one, double bearing_two);
-double getPIDOutput(double error, PIDGains gains);
-double getBearing(const double* vector);
+double getBearingDifference(double bearingOne, double bearingTwo);
+double getCompassBearing(const double* vector);
+double getBearing(std::tuple<double, double> vector);
+
+
+double getPIDOutput(double error, PIDGains gains, PIDState state);
