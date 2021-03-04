@@ -22,6 +22,7 @@
 #include "Sensors.hpp"
 #include "Movement.hpp"
 #include "Motors.hpp"
+#include "Servos.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -38,6 +39,7 @@ double blockdistance = 0;
 Robot *robot = new Robot();
 tuple<Motor*, Motor*> motors = initMotors(robot, "wheel1", "wheel2");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
+Motor* gripperservo = initServo(robot, "gripper motor");
 
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
@@ -45,63 +47,65 @@ tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
+/*
 vector<tuple<double, double> > target_points = { tuple<double, double>(-0.4, 0.8),
                                                 tuple<double, double>(-0.4, 0.0),
                                                 tuple<double, double>(0.4, 0.0),
                                                 tuple<double, double>(0.4, 0.8) };
+*/
 
+int main(int argc, char** argv) {
+    // get the time step of the current world.
+    int timeStep = (int)robot->getBasicTimeStep();
 
-int main(int argc, char **argv) {
-  // get the time step of the current world.
-  int timeStep = (int)robot->getBasicTimeStep();
-  int i = 0;
-  updateTargetPosition(target_points[i]);
-  i++;
+    // - perform simulation steps until Webots is stopping the controller
+    while (robot->step(timeStep) != -1) {
+        // Read the sensors:
+        oldval1 = val1;
+        val1 = getDistanceMeasurement(ds1);
+        /*
+        const double* bearing = getDirection(compass);
+        const double* pos = getlocation(gps);
 
-  // - perform simulation steps until Webots is stopping the controller
-  while (robot->step(timeStep) != -1) {
-    // Read the sensors:
-    oldval1 = val1;
-    val1 = getDistanceMeasurement(ds1);
+        tuple<double, double> position(pos[0], pos[2]);
+        tuple<double, double> motor_speeds = moveToPosition(position, bearing);
+        setMotorVelocity(motors, motor_speeds);
+        if (hasReachedPosition()) {
+          cout << "Arrived!" << endl;
+          updateTargetPosition(target_points[i]);
+          i = (i+1) % 4;
+        }
+        */
 
-    const double* bearing = getDirection(compass);
-    const double* pos = getlocation(gps);
+        //cout << getLightMeasurement(ls1) << endl;
+        //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
+        //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
+        // Enter here functions to read sensor data, like:
 
-    tuple<double, double> position(pos[0], pos[2]);
-    tuple<double, double> motor_speeds = moveToPosition(position, bearing);
-    setMotorVelocity(motors, motor_speeds);
-    if (hasReachedPosition()) {
-      cout << "Arrived!" << endl;
-      updateTargetPosition(target_points[i]);
-      i = (i+1) % 4;
+        
+        if(!BLOCK_DETECTED){
+          scan_for_blocks();}
+        else {
+            static char i = 0;
+            if (i == 0) {
+                emitData(emitter, "block found", 12);
+                i++;
+                }
+            drive_to_block();
+             }
+        char* received_data = receiveData(receiver);
+        if(received_data){
+            string data_string(received_data);
+            cout << data_string << endl;
+        }
+
+      };
+      
+
+        delete robot;
+        return 0;
     }
 
-    //cout << getLightMeasurement(ls1) << endl;
-    //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
-    //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
-    // Enter here functions to read sensor data, like:
-    
-    /*
-    if(!BLOCK_DETECTED){
-      scan_for_blocks();}
-    else {
-        static bool i = 0;
-        if (i == 0) {
-            emitData(emitter, "block found", 12);
-            i++;
-            }   
-        drive_to_block();
-         }
-    char* received_data = receiveData(receiver);
-    if(received_data){
-        string data_string(received_data);
-        cout << data_string << endl;
-    }
-    */
-  };
-  delete robot;
-  return 0;
-}
 
 
 bool scan_for_blocks(){ 
@@ -140,6 +144,7 @@ void drive_to_block(){
   }
   else {
     setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+    openGripper(gripperservo);
     blockdistance = val1;
   }
 }
