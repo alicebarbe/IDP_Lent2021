@@ -18,8 +18,9 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.2977978304287727 -0.9448950349190988 -0.13597729655038437 1.2493152244177
-  position -3.898402693157574 1.804760962249111 1.9895911991630715
+  orientation -0.999507885957911 -0.03096788806704464 -0.004997581076367958 0.3201548769038857
+  position 0.061227520071175094 0.40214435249765434 1.0389263562859385
+  follow "RobotAssemblyTemp"
 }
 Background {
   skyColor [
@@ -35,6 +36,9 @@ target {
   translation -0.639 0.05 0.42
   name "target(9)"
 }
+RobotAssemblyTemp {
+  translation 0 0.06 -2.20392e-07
+}
 target {
   translation 0.977 0.05 0.6057
   name "target(8)"
@@ -48,6 +52,7 @@ target {
   name "target(6)"
 }
 Assembly {
+  translation 0 0 -0.37
   rotation 0 0 1 1.5708
 }
 target {
