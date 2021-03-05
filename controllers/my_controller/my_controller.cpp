@@ -94,10 +94,10 @@ int main(int argc, char** argv) {
             drive_to_block();
              }
         char* received_data = receiveData(receiver);
-        if(received_data){
+       /* if(received_data){
             string data_string(received_data);
             cout << data_string << endl;
-        }
+        }*/
 
       };
       

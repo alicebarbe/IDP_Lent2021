@@ -12,6 +12,6 @@ Motor* initServo(Robot* robot, const char* name) {
 }
 
 void openGripper(Motor* gripper) {
-	gripper->setPosition(-1.5707);
+	gripper->setPosition(1.5707);
 	return;
 }
