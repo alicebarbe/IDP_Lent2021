@@ -28,6 +28,8 @@
 using namespace webots;
 using namespace std;
 
+//typedef tuple<int, double, double> message;
+
 bool scan_for_blocks();
 void drive_to_block(void);
 
@@ -88,12 +90,16 @@ int main(int argc, char** argv) {
         else {
             static char i = 0;
             if (i == 0) {
-                emitData(emitter, "block found", 12);
+                message yessir{};
+                yessir = { 14 ,1.1,2.4 };
+                const void* alpha = &yessir;
+               
+                emitData(emitter, alpha, 17);//"block found", 12);
                 i++;
                 }
             drive_to_block();
              }
-        char* received_data = receiveData(receiver);
+        //char* received_data = receiveData(receiver);
        /* if(received_data){
             string data_string(received_data);
             cout << data_string << endl;

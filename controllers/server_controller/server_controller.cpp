@@ -8,19 +8,23 @@
 #include <webots/Robot.hpp>
 #include <webots/Receiver.hpp>
 #include <webots/Emitter.hpp>
+#include <tuple>
+
 
 
 using namespace webots;
 using namespace std;
+typedef tuple<int, double, double> message;
 
 Emitter* initEmitter(Robot* server, const char* name);
 Receiver* initReceiver(Robot* server, const char* name);
 void emitData(Emitter* emitter, const void* data, int size);
-char* receiveData(Receiver* receiver);
+message* receiveData(webots::Receiver* receiver);
 
 Robot* server = new Robot();
 Receiver* receiver = initReceiver(server, "receiver");
 Emitter* emitter = initEmitter(server, "emitter");
+unsigned char* received_data;
 
 
 int main(int argc, char** argv) {
@@ -34,11 +38,13 @@ int main(int argc, char** argv) {
 
 
 	while (server->step(timeStep) != -1) {
-		char* received_data = receiveData(receiver);
+		message* received_data = receiveData(receiver);
+		
+		
 
 		if (received_data) {
-			string data_string(received_data);
-			cout << "server receives" << data_string << endl;
+		
+			cout << "server receives:  " << get<0>(*received_data) << "  " << get<1>(*received_data) << "  " << get<2>(*received_data) << endl;
 		};
 
 
@@ -64,12 +70,13 @@ void emitData(Emitter* emitter, const void* data, int size) {
 	return;
 }
 
-char* receiveData(Receiver* receiver) {
+message* receiveData(Receiver* receiver) {
 	if (receiver->getQueueLength() > 0) {					//if there is a message in receive buffer
-		char* received_data = (char*)receiver->getData();		//get the message		
+		message* received_data = (message*) receiver->getData();		//get the message		
 		receiver->nextPacket();									//move onto next message in queue	
 		return received_data;
 	}
 	else return 0;
+
 }
 
