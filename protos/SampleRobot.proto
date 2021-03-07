@@ -20,7 +20,7 @@ Robot {
       ]
     }
     GPS {
-      translation 0 0.03 -0.02
+      translation 0 0.03 0.05
       name "gps"
       children [
         Shape {
@@ -118,6 +118,8 @@ Robot {
         ]
         name "solid(3)"
         boundingObject USE BOX
+        physics Physics {
+        }
       }
     }
     Camera {
@@ -207,8 +209,9 @@ Robot {
     }
     DEF DS_RIGHT DistanceSensor {
       translation 0 0 0.1
-      rotation -0.03 0.9995 0 -1.570796
+      rotation -0.02 0.9995 0 -1.570796
       type "generic"
+      aperture 0.261799
       lookupTable[ 0 0 0,2.4 2.4 0]
       children [
         Shape {

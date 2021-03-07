@@ -26,5 +26,6 @@ double getBearingDifference(double bearingOne, double bearingTwo);
 double getCompassBearing(const double* vector);
 double getBearing(std::tuple<double, double> vector);
 
-
 double getPIDOutput(double error, PIDGains gains, PIDState state);
+
+std::tuple<double, double> rotateVector(const std::tuple<double, double> vector, double angle);
