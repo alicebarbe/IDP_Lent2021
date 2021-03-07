@@ -153,7 +153,7 @@ void pathfind(int robot_identifier) {
 			get<2>(green_target_list[i]) = distance_from_robot(1, get<1>(green_target_list[i]), get<2>(green_target_list[i]));
 		}
 		sort(green_target_list.begin(), green_target_list.end());						//sort green lists into ascending order of distance
-		new_target_message = { 10, get<1>(green_target_list[0]), get<2>(green_target_list[0]) }; //send next target
+		new_target_message = { 10, get<1>(green_target_list[0]), get<2>(green_target_list[0]) }; //send next target (the closest)
 		const void* data_to_send = &new_target_message;
 		emitData(emitter, data_to_send, 17);
 	}
