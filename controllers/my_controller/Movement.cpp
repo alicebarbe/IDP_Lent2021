@@ -12,8 +12,9 @@
 using namespace std;
 using namespace webots;
 
-const PIDGains RotationalPIDGains{ 0.1, 0, 0, 0.5, 10};
-const double turnOnlyThresh = 2;  // if more than 10 degrees from the correct heading dont move forwards
+const PIDGains RotationalPIDGains{ 0.1, 0, 0, 0.1, 10};
+const double endTurnThresh = 0.1;  // raise reached rotation flag when less than 0.1 degrees from the target rotation
+const double turnOnlyThresh = 2;  // if more than this many degrees from the correct heading dont move forwards
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
 const double endMoveThresh = 0.00025; // (m^2) If less than the root of this distance away from the target dont move any more
 
@@ -62,7 +63,7 @@ tuple<double, double> moveToPosition(tuple<double, double> currentPosition,
   }
   if (forwardStage) {
     forward_speed = clamp(getPIDOutput(distance_to_target, ForwardPIDGains, ForwardPIDState), -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
-    cout << distance_to_target << endl;
+    // cout << distance_to_target << endl;
     if (abs(distance_to_target) < noTurnThresh) {
       turningStage = false;
     }
@@ -123,4 +124,11 @@ double getBearing(tuple<double, double> vector) {
   if (bearing < 0.0)
     bearing = bearing + 360.0;
   return bearing;
+}
+
+tuple<double, double> rotateVector(const tuple<double, double> vector, double angle) {
+  double radAngle = angle * M_PI / 180.0;
+  double rotatedX = get<0>(vector) * cos(radAngle) - get<1>(vector) * sin(radAngle);
+  double rotatedZ = get<0>(vector) * sin(radAngle) + get<1>(vector) * cos(radAngle);
+  return tuple<double, double>(rotatedX, rotatedZ);
 }
