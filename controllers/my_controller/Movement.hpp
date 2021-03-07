@@ -17,9 +17,12 @@ struct PIDState {
 };
 
 void updateTargetPosition(std::tuple<double, double> newTarget);
+void tweakBlockDistanceFromMeasurement(std::tuple<double, double> robotPosition, std::tuple<double, double> sensorDisplacement, std::tuple<double, double> frontOfRobotDisplacement, const double* currentBearingVector, double distance);
 bool hasReachedPosition();
+bool hasFinishedTurning();
 std::tuple<double, double> moveToPosition(std::tuple<double, double> currentPosition, const double* currentBearing);
 double turnToBearing(double bearing, double currentBearing);
+
 
 //utility functions
 double getBearingDifference(double bearingOne, double bearingTwo);

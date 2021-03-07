@@ -58,7 +58,7 @@ tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
-tuple<double, double> frontOfRobot(0.1, 0.025);
+tuple<double, double> frontOfRobot(0.08, 0.015);
 tuple<double, double> distanceSensorDisplacement(0.05, 0.0);
 
 int main(int argc, char** argv) {
@@ -283,14 +283,19 @@ void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
     position = make_tuple(pos[0], pos[2]);
     tuple<double, double> motor_speeds = moveToPosition(position, bearing);
     setMotorVelocity(motors, motor_speeds);
+    if (hasFinishedTurning()) {
+      double distance = getDistanceMeasurement(ds1);
+      cout << "taking distance measurements" << endl;
+      tweakBlockDistanceFromMeasurement(position, distanceSensorDisplacement, frontOfRobot, bearing, distance);
+    }
     if (hasReachedPosition()) {
       cout << "Arrived!" << endl;
       i = (i + 1);
       if (i >= blockPositions.size()) {
-        break;
+        //break;
       }
-      nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
-      updateTargetPosition(nextTarget);
+      //nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
+      //updateTargetPosition(nextTarget);
     }
   }
 }

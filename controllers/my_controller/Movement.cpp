@@ -23,6 +23,8 @@ PIDState RotationalPIDState{ 0, 0 };
 const PIDGains ForwardPIDGains{ 1000, 0, 0, 0, 0.01};
 PIDState ForwardPIDState{ 0, 0 };
 
+const double distanceMeasurementWeight = 0.2;  // how much weight to give new distance sensor measurements when recalculating block position
+
 tuple<double, double> targetPosition;
 bool turningStage = false;
 bool forwardStage = false;
@@ -38,8 +40,24 @@ void updateTargetPosition(tuple<double, double> newTarget) {
   RotationalPIDState = PIDState{ 0, 0 };
 }
 
+void tweakBlockDistanceFromMeasurement(tuple<double, double> robotPosition, tuple<double, double> sensorDisplacement, tuple<double, double> frontOfRobotDisplacement, const double* currentBearingVector, double distance) {
+  tuple<double, double> rotatedSensorDisp = rotateVector(sensorDisplacement, getCompassBearing(currentBearingVector));
+  tuple<double, double> displacementFromDistanceSensor = tuple<double, double>(get<0>(targetPosition) - get<0>(robotPosition) - get<0>(rotatedSensorDisp),
+    get<1>(targetPosition) - get<1>(robotPosition) - get<1>(rotatedSensorDisp));
+  double expectedDist = get<0>(displacementFromDistanceSensor) * currentBearingVector[2] + get<0>(displacementFromDistanceSensor) * currentBearingVector[0];
+  double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
+
+  cout << "Expected distance: " << expectedDist << "   actual distance:" << distance << endl;
+  get<0>(targetPosition) += (distance - get<0>(frontOfRobotDisplacement) - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
+  get<1>(targetPosition) += (distance - get<0>(frontOfRobotDisplacement) - expectedDist) * currentBearingVector[0] * distanceMeasurementWeight;
+}
+
 bool hasReachedPosition() {
   return reachedPosition;
+}
+
+bool hasFinishedTurning() {
+  return !turningStage;
 }
 
 tuple<double, double> moveToPosition(tuple<double, double> currentPosition,

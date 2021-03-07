@@ -214,9 +214,8 @@ Robot {
     DEF DS_RIGHT DistanceSensor {
       translation 0 0 0.1
       rotation -0.02 0.9995 0 -1.570796
-      type "generic"
-      aperture 0.261799
-      lookupTable[ 0 0 0,2.4 2.4 0]
+      aperture 0.26179
+      lookupTable[ 0 0 0, 2.4 2.4 0]
       children [
         Shape {
           appearance PBRAppearance {
