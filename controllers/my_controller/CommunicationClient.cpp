@@ -1,8 +1,10 @@
 #include "CommunicationClient.hpp"
 #include <webots/robot.hpp>
 #include <webots/GPS.hpp>
+#include <tuple>
 
 using namespace webots;
+using namespace std;
 
 
 GPS* initGPS(Robot* robot, const char* name) {							//initialises GPS module for the robot
@@ -41,9 +43,9 @@ void emitData(Emitter* emitter, const void* data, int size) {
 	return;
 }
 
-char* receiveData(Receiver* receiver) {
+message* receiveData(Receiver* receiver) {
 	if (receiver->getQueueLength() > 0) {					//if there is a message in receive buffer
-		char* received_data = (char*) receiver->getData();		//get the message		
+		message* received_data = (message*) receiver->getData();		//get the message		
 		receiver->nextPacket();									//move onto next message in queue	
 		return received_data;
 	}

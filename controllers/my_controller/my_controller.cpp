@@ -31,6 +31,8 @@
 using namespace webots;
 using namespace std;
 
+//typedef tuple<int, double, double> message;
+
 bool scan_for_blocks();
 void drive_to_block(void);
 vector<tuple<double, double>> scanForBlocks(int timeStep);
@@ -73,8 +75,8 @@ int main(int argc, char** argv) {
   vector<tuple<double, double>>targetPoints = scanForBlocks(timeStep);
 
   cout << "Blocks found: " << endl;
-  for (int iHope = 0; iHope < targetPoints.size(); iHope++) {
-    cout << "( " << get<0>(targetPoints[iHope]) << ", " << get<1>(targetPoints[iHope]) << ") " << endl;
+  for (int k = 0; k < targetPoints.size(); k++) {
+    cout << "( " << get<0>(targetPoints[k]) << ", " << get<1>(targetPoints[k]) << ") " << endl;
   }
 
   moveToBlocks(timeStep, targetPoints);
@@ -90,23 +92,26 @@ int main(int argc, char** argv) {
     //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
     // Enter here functions to read sensor data, like:
 
-    /*
-    if(!BLOCK_DETECTED){
-      scan_for_blocks();}
-    else {
-        static char i = 0;
-        if (i == 0) {
-            emitData(emitter, "block found", 12);
-            i++;
-            }
-        drive_to_block();
-          }
-    char* received_data = receiveData(receiver);
-    if(received_data){
-        string data_string(received_data);
-        cout << data_string << endl;
-    }
-    */
+        
+        if(!BLOCK_DETECTED){
+          scan_for_blocks();}
+        else {
+            static char i = 0;
+            if (i == 0) {
+                message yessir{};
+                yessir = { 14 ,1.1,2.4 };
+                const void* alpha = &yessir;
+               
+                emitData(emitter, alpha, 17);//"block found", 12);
+                i++;
+                }
+            drive_to_block();
+             }
+        //char* received_data = receiveData(receiver);
+       /* if(received_data){
+            string data_string(received_data);
+            cout << data_string << endl;
+        }*/
 
     };
       
@@ -150,7 +155,6 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
   setMotorVelocity(motors, motorTurnSpeed);
 
   while (robot->step(timeStep) != -1) {
-    cout << "last jump" << get<0>(afterLastJump) << "  " << get<1>(afterLastJump) << endl;
     lastDistance = distance;
     lastBearing = bearing;
     distance = getDistanceMeasurement(ds1);
@@ -269,7 +273,6 @@ void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
   tuple<double, double> position(pos[0], pos[2]);
   tuple<double, double> nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
   updateTargetPosition(nextTarget);
-  i++;
 
   // - perform simulation steps until Webots is stopping the controller
   while (robot->step(timeStep) != -1) {
@@ -282,9 +285,12 @@ void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
     setMotorVelocity(motors, motor_speeds);
     if (hasReachedPosition()) {
       cout << "Arrived!" << endl;
+      i = (i + 1);
+      if (i >= blockPositions.size()) {
+        break;
+      }
       nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
       updateTargetPosition(nextTarget);
-      i = (i + 1) % blockPositions.size();
     }
   }
 }

@@ -55,7 +55,9 @@ Robot {
       device [
         RotationalMotor {
           name "gripper motor"
-          maxTorque 100
+          maxTorque 0.1
+        }
+        physics Physics {
         }
       ]
       endPoint Solid {
@@ -111,6 +113,8 @@ Robot {
                 geometry Box {
                   size 0.02 0.07 0.1
                 }
+                physics Physics {
+        }
               }
             ]
             boundingObject USE BOX
