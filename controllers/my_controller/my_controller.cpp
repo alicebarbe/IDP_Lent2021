@@ -22,10 +22,12 @@
 #include <webots/DistanceSensor.hpp>
 
 #include "CommunicationClient.hpp"
+#include "SimulationParameters.hpp"
 #include "Sensors.hpp"
 #include "Movement.hpp"
 #include "Motors.hpp"
 #include "Servos.hpp"
+#include "Utility.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -36,41 +38,30 @@ using namespace std;
 bool scan_for_blocks();
 void drive_to_block(void);
 vector<tuple<double, double>> scanForBlocks(int timeStep);
-tuple<double, double> getBlockPosition(double angle, double distance, const double* robot_pos, const tuple<double, double> sensorDisplacement);
-double getWallDistance(const double* robot_pos, double angle, const tuple<double, double> sensorDisplacement);
-tuple<double, double> rotateVector(const tuple<double, double> vector, double angle);
-std::tuple<double, double> getPositionInfrontOfBlock(std::tuple<double, double> blockPosition, std::tuple<double, double> robotPosition, std::tuple<double, double> grabberDisplacement);
 void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions);
+void sensorHeatUp(int timeStep, int warmupLength);
 
 bool BLOCK_DETECTED = 0;
 
 double val1 = 0;
 static double oldval1 = 0;
 double blockdistance = 0;
+
+// Webots sensors/actuators
 Robot *robot = new Robot();
 tuple<Motor*, Motor*> motors = initMotors(robot, "wheel1", "wheel2");
-DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 Motor* gripperservo = initServo(robot, "gripper motor");
-
+DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
-tuple<double, double> frontOfRobot(0.08, 0.015);
-tuple<double, double> distanceSensorDisplacement(0.05, 0.0);
-
 int main(int argc, char** argv) {
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
-  int j = 0;
-  while (robot->step(timeStep) != -1) {
-    j++;
-    if (j == 10) {
-      break;
-    }
-  }
+  sensorHeatUp(timeStep, 5);
 
   vector<tuple<double, double>>targetPoints = scanForBlocks(timeStep);
 
@@ -86,36 +77,29 @@ int main(int argc, char** argv) {
     // Read the sensors:
     oldval1 = val1;
     val1 = getDistanceMeasurement(ds1);
-        
-    //cout << getLightMeasurement(ls1) << endl;
-    //cout << getlocation(gps)[0] << getlocation(gps)[1] << getlocation(gps)[2] << endl;
-    //cout << "x:" << getDirection(compass)[0] << "y:" << getDirection(compass)[1] << "z:" <<getDirection(compass)[2] << endl;
-    // Enter here functions to read sensor data, like:
-
-        
-        if(!BLOCK_DETECTED){
-          scan_for_blocks();}
-        else {
-            static char i = 0;
-            if (i == 0) {
-                message yessir{};
-                yessir = { 14 ,1.1,2.4 };
-                const void* alpha = &yessir;
+       
+    if(!BLOCK_DETECTED){
+      scan_for_blocks();
+    }
+    else {
+      static char i = 0;
+      if (i == 0) {
+        message yessir{};
+        yessir = { 14 ,1.1,2.4 };
+        const void* alpha = &yessir;
                
-                emitData(emitter, alpha, 17);//"block found", 12);
-                i++;
-                }
-            drive_to_block();
-             }
-        //char* received_data = receiveData(receiver);
-       /* if(received_data){
-            string data_string(received_data);
-            cout << data_string << endl;
-        }*/
+        emitData(emitter, alpha, 17);//"block found", 12);
+        i++;
+        }
+      drive_to_block();
+    }
+    //char* received_data = receiveData(receiver);
+    /* if(received_data){
+        string data_string(received_data);
+        cout << data_string << endl;
+    }*/
 
-    };
-      
-
+  }
   delete robot;
   return 0;
 }
@@ -123,32 +107,24 @@ int main(int argc, char** argv) {
 vector< tuple<double, double> > scanForBlocks(int timeStep) {
   const int measureTimeInterval = 1;  // wait this many simulation timesteps before measuring
   const tuple<double, double> motorTurnSpeed(0.5, -0.5);
-  const double blockDetectThresh = 0.05;
-  const double sensorBeamAngle = 0;
-  const double blockSize = 0.05;
+  const double blockDetectThresh = 0.05;  // detect changes in ultrasound measuruments greater than this
 
   int i = 0;
 
-  vector<double> distances;
-  vector<double> bearings;
   vector< tuple<double, double>> blockPositions;
-
-  bool detectingBlock = false;
-  bool facingBlock = false;
 
   double lastDistance = getDistanceMeasurement(ds1);
   double distance = lastDistance;
   double lastBearing = getCompassBearing(getDirection(compass));
   double bearing = lastBearing;
   double wallDistance;
+  const double* robotPos;
 
   bool firstJump = true;
-  tuple<double, double> beforeLastJump, afterLastJump;
+  tuple<double, double> afterLastJump;
   bool lastJumpWasFall = true;
   tuple<double, double> beforeJump, afterJump;
   bool jumpWasFall = true;
-
-  const double* robotPos;
 
   double startBearing = bearing;
   bool crossedNorthOnce = false;
@@ -159,10 +135,11 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
     lastBearing = bearing;
     distance = getDistanceMeasurement(ds1);
     bearing = getCompassBearing(getDirection(compass));
+
     if (!crossedNorthOnce && bearing < startBearing) {
       crossedNorthOnce = true;
     }
-    if (crossedNorthOnce && !facingBlock && bearing > startBearing) {
+    if (crossedNorthOnce && bearing > startBearing) {
       break;
     }
 
@@ -172,15 +149,16 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
       robotPos = getlocation(gps);
       wallDistance = getWallDistance(robotPos, bearing, distanceSensorDisplacement);
 
-      // check for a sudden fall in distance
-      if (distance - lastDistance < -blockDetectThresh) {
-        cout << "fall in distance" << endl;
-        if (firstJump) {
-          beforeJump = make_tuple(lastDistance, lastBearing);
-          afterJump = make_tuple(distance, bearing);
-          jumpWasFall = true;
+      if (abs(distance - lastDistance) > blockDetectThresh) {
+        afterLastJump = afterJump;
+        lastJumpWasFall = jumpWasFall;
 
-          beforeLastJump = beforeJump;
+        beforeJump = make_tuple(lastDistance, lastBearing);
+        afterJump = make_tuple(distance, bearing);
+        jumpWasFall = (distance - lastDistance < 0);
+
+        if (firstJump) {
+          // handle the first jump case
           afterLastJump = afterJump;
           lastJumpWasFall = jumpWasFall;
 
@@ -188,77 +166,8 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
           continue;
         }
 
-        beforeLastJump = beforeJump;
-        afterLastJump = afterJump;
-        lastJumpWasFall = jumpWasFall;
-
-        beforeJump = make_tuple(lastDistance, lastBearing);
-        afterJump = make_tuple(distance, bearing);
-        jumpWasFall = true;
-          
         if (get<0>(beforeJump) < wallDistance - blockDetectThresh) {
-          if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle) {
-            // block is not being obscured by anything else
-            double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
-            double blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
-
-            blockPositions.push_back(getBlockPosition(blockAvgAngle, blockAvgDistance, robotPos, distanceSensorDisplacement));
-          }
-          else if (lastJumpWasFall) {
-            // block partially obscured by something infront of it at the new jump side
-            double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
-            double blockAvgAngle = get<1>(afterLastJump) + (sensorBeamAngle + (blockSize * 180) / (blockAvgDistance * M_PI)) / 2;
-
-            blockPositions.push_back(getBlockPosition(blockAvgAngle, blockAvgDistance, robotPos, distanceSensorDisplacement));
-          }
-          else {
-            // in this case we still have some information on the block, might be worth sending
-            cout << "Not possible to accurately find block, ignoring" << endl;
-          }
-        }
-      }
-
-      // check for a sudden rise in distance
-      if (distance - lastDistance > blockDetectThresh) {
-        cout << "rise in distance" << endl;
-        if (firstJump) {
-          beforeJump = make_tuple(lastDistance, lastBearing);
-          afterJump = make_tuple(distance, bearing);
-          jumpWasFall = false;
-
-          beforeLastJump = beforeJump;
-          afterLastJump = afterJump;
-          lastJumpWasFall = jumpWasFall;
-          firstJump = false;
-          continue;
-        }
-
-        beforeLastJump = beforeJump;
-        afterLastJump = afterJump;
-        lastJumpWasFall = jumpWasFall;
-
-        beforeJump = make_tuple(lastDistance, lastBearing);
-        afterJump = make_tuple(distance, bearing);
-        jumpWasFall = false;
-
-        if (get<0>(beforeJump) < wallDistance - blockDetectThresh) {
-          if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle) {
-            // block is not being obscured by anything else
-            double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
-            double blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
-
-            blockPositions.push_back(getBlockPosition(blockAvgAngle, blockAvgDistance, robotPos, distanceSensorDisplacement));
-          }
-          else if (!lastJumpWasFall) {
-            // block partially obscured by something infront of it at the last jump side
-            double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
-            double blockAvgAngle = get<1>(beforeJump) - (sensorBeamAngle + (blockSize * 180) / (blockAvgDistance * M_PI)) / 2;
-
-            blockPositions.push_back(getBlockPosition(blockAvgAngle, blockAvgDistance, robotPos, distanceSensorDisplacement));
-          }
-          else {
-            cout << "Measurement too small, ignoring" << endl;
-          }
+          blockPositions.push_back(getBlockPosition(afterLastJump, beforeJump, lastJumpWasFall, jumpWasFall, robotPos, ULTRASOUND_BEAM_ANGLE));
         }
       }
     }
@@ -271,12 +180,10 @@ void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
   int i = 0;
   const double* pos = getlocation(gps);
   tuple<double, double> position(pos[0], pos[2]);
-  tuple<double, double> nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
+  tuple<double, double> nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
   updateTargetPosition(nextTarget);
 
-  // - perform simulation steps until Webots is stopping the controller
   while (robot->step(timeStep) != -1) {
-    // Read the sensors:
     const double* bearing = getDirection(compass);
     pos = getlocation(gps);
 
@@ -285,48 +192,27 @@ void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
     setMotorVelocity(motors, motor_speeds);
     if (hasFinishedTurning()) {
       double distance = getDistanceMeasurement(ds1);
-      cout << "taking distance measurements" << endl;
-      tweakBlockDistanceFromMeasurement(position, distanceSensorDisplacement, frontOfRobot, bearing, distance);
+      tweakBlockDistanceFromMeasurement(position, bearing, distance);
     }
     if (hasReachedPosition()) {
       cout << "Arrived!" << endl;
-      i = (i + 1);
-      if (i >= blockPositions.size()) {
-        //break;
+      if (++i >= blockPositions.size()) {
+        break;
       }
-      //nextTarget = getPositionInfrontOfBlock(blockPositions[i], position, frontOfRobot);
-      //updateTargetPosition(nextTarget);
+      nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
+      updateTargetPosition(nextTarget);
     }
   }
 }
 
-tuple<double, double> getBlockPosition(double angle, double distance, const double* robot_pos, const tuple<double, double> sensorDisplacement) {
-  tuple<double, double> rotatedSensorDisp = rotateVector(sensorDisplacement, angle);
-  double block_x = robot_pos[0] + get<0>(rotatedSensorDisp) + distance * cos(angle * M_PI / 180.0);
-  double block_z = robot_pos[2] + get<1>(rotatedSensorDisp) + distance * sin(angle * M_PI / 180.0);
-  return tuple<double, double>(block_x, block_z);
-}
-
-tuple<double, double> getPositionInfrontOfBlock(tuple<double, double> blockPosition, tuple<double, double> robotPosition, tuple<double, double> grabberDisplacement) {
-  tuple<double, double> displacement(get<0>(blockPosition) - get<0>(robotPosition), get<1>(blockPosition) - get<1>(robotPosition));
-  double target_bearing = getBearing(displacement);
-
-  tuple<double, double> rotatedGrabberDisp = rotateVector(grabberDisplacement, target_bearing);
-  return tuple<double, double>(get<0>(blockPosition) - get<0>(rotatedGrabberDisp), get<1>(blockPosition) - get<1>(rotatedGrabberDisp));
-}
-
-double getWallDistance(const double* robot_pos, double angle, const tuple<double, double> sensorDisplacement) {
-  double boundXPos, boundXNeg, boundZPos, boundZNeg;
-  double radAngle = angle * M_PI / 180.0;
-  tuple<double, double> rotatedSensorDisp = rotateVector(sensorDisplacement, angle);
-
-  boundXPos = (1.2 - robot_pos[0] - get<0>(rotatedSensorDisp)) / cos(radAngle);
-  boundXNeg = (-1.2 - robot_pos[0] - get<0>(rotatedSensorDisp)) / cos(radAngle);
-
-  boundZPos = (1.2 - robot_pos[2] - get<1>(rotatedSensorDisp)) / sin(radAngle);
-  boundZNeg = (-1.2 - robot_pos[2] - get<1>(rotatedSensorDisp)) / sin(radAngle);
-
-  return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+void sensorHeatUp(int timeStep, int warmupLength) {
+  int j = 0;
+  while (robot->step(timeStep) != -1) {
+    j++;
+    if (j == warmupLength) {
+      break;
+    }
+  }
 }
 
 bool scan_for_blocks(){ 

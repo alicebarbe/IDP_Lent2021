@@ -1,6 +1,6 @@
 #include "Sensors.hpp"
 #include "SimulationParameters.hpp"
-#include "math.h"
+#include <math.h>
 #include <webots/Motor.hpp>
 
 using namespace webots;
