@@ -6,6 +6,8 @@
 #include <cmath>
 
 #include "Utility.hpp"
+#include "Coordinate.hpp"
+#include "SimulationParameters.hpp"
 
 using namespace std;
 
@@ -15,15 +17,15 @@ using namespace std;
 */
 double getCompassBearing(const double* vector) {
   double rad = atan2(vector[0], vector[2]);
-  double bearing = rad / M_PI * 180.0;
+  double bearing = rad * RAD_TO_DEG;
   if (bearing < 0.0)
     bearing = bearing + 360.0;
   return bearing;
 }
 
-double getBearing(tuple<double, double> vector) {
-  double rad = atan2(get<1>(vector), get<0>(vector));
-  double bearing = rad / M_PI * 180.0;
+double getBearing(coordinate vector) {
+  double rad = atan2(vector.z, vector.x);
+  double bearing = rad * RAD_TO_DEG;
   if (bearing < 0.0)
     bearing = bearing + 360.0;
   return bearing;
@@ -40,23 +42,23 @@ double getBearingDifference(double bearingOne, double bearingTwo) {
   return diff;
 }
 
-tuple<double, double> rotateVector(const tuple<double, double> vector, double angle) {
-  double radAngle = angle * M_PI / 180.0;
-  double rotatedX = get<0>(vector) * cos(radAngle) - get<1>(vector) * sin(radAngle);
-  double rotatedZ = get<0>(vector) * sin(radAngle) + get<1>(vector) * cos(radAngle);
-  return tuple<double, double>(rotatedX, rotatedZ);
+coordinate rotateVector(const coordinate vector, double angle) {
+  double radAngle = angle * DEG_TO_RAD;
+  double rotatedX = vector.x * cos(radAngle) - vector.z * sin(radAngle);
+  double rotatedZ = vector.x * sin(radAngle) + vector.z * cos(radAngle);
+  return coordinate(rotatedX, rotatedZ);
 }
 
-double getWallDistance(const double* robot_pos, double angle, const tuple<double, double> sensorDisplacement) {
+double getWallDistance(const coordinate robotPos, double angle) {
   double boundXPos, boundXNeg, boundZPos, boundZNeg;
-  double radAngle = angle * M_PI / 180.0;
-  tuple<double, double> rotatedSensorDisp = rotateVector(sensorDisplacement, angle);
+  double radAngle = angle * DEG_TO_RAD;
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, angle);
 
-  boundXPos = (1.2 - robot_pos[0] - get<0>(rotatedSensorDisp)) / cos(radAngle);
-  boundXNeg = (-1.2 - robot_pos[0] - get<0>(rotatedSensorDisp)) / cos(radAngle);
+  boundXPos = (ARENA_X_MAX - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
+  boundXNeg = (ARENA_X_MIN - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
 
-  boundZPos = (1.2 - robot_pos[2] - get<1>(rotatedSensorDisp)) / sin(radAngle);
-  boundZNeg = (-1.2 - robot_pos[2] - get<1>(rotatedSensorDisp)) / sin(radAngle);
+  boundZPos = (ARENA_Z_MAX - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
+  boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
 }

@@ -169,6 +169,7 @@
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Supervisor.cpp" />
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\TouchSensor.cpp" />
     <ClCompile Include="CommunicationClient.cpp" />
+    <ClCompile Include="Coordinate.cpp" />
     <ClCompile Include="Motors.cpp" />
     <ClCompile Include="Movement.cpp" />
     <ClCompile Include="my_controller.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="CommunicationClient.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Coordinate.hpp" />
     <ClInclude Include="Motors.hpp" />
     <ClInclude Include="Movement.hpp" />
     <ClInclude Include="Sensors.hpp">

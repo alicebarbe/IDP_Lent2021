@@ -9,6 +9,7 @@
 #include "Movement.hpp"
 #include "SimulationParameters.hpp"
 #include "Utility.hpp"
+#include "Coordinate.hpp"
 
 using namespace std;
 using namespace webots;
@@ -18,19 +19,19 @@ const double endTurnThresh = 0.1;  // raise reached rotation flag when less than
 const double turnOnlyThresh = 2;  // if more than this many degrees from the correct heading dont move forwards
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
 const double endMoveThresh = 0.00025; // (m^2) If less than the root of this distance away from the target dont move any more
-const double distanceMeasurementWeight = 0.2;  // how much weight to give new distance sensor measurements when recalculating block position
+const double distanceMeasurementWeight = 0.5;  // how much weight to give new distance sensor measurements when recalculating block position
 
 PIDState RotationalPIDState{ 0, 0 };
 
 const PIDGains ForwardPIDGains{ 1000, 0, 0, 0, 0.01};
 PIDState ForwardPIDState{ 0, 0 };
 
-tuple<double, double> targetPosition;
+coordinate targetPosition;
 bool turningStage = false;
 bool forwardStage = false;
 bool reachedPosition = false;
 
-void updateTargetPosition(tuple<double, double> newTarget) {
+void updateTargetPosition(coordinate newTarget) {
   targetPosition = newTarget;
   turningStage = true;
   forwardStage = false;
@@ -40,16 +41,17 @@ void updateTargetPosition(tuple<double, double> newTarget) {
   RotationalPIDState = PIDState{ 0, 0 };
 }
 
-void tweakBlockDistanceFromMeasurement(tuple<double, double> robotPosition, const double* currentBearingVector, double distance) {
-  tuple<double, double> rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
-  tuple<double, double> displacementFromDistanceSensor = tuple<double, double>(get<0>(targetPosition) - get<0>(robotPosition) - get<0>(rotatedSensorDisp),
-    get<1>(targetPosition) - get<1>(robotPosition) - get<1>(rotatedSensorDisp));
-  double expectedDist = get<0>(displacementFromDistanceSensor) * currentBearingVector[2] + get<0>(displacementFromDistanceSensor) * currentBearingVector[0];
+void tweakBlockDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance) {
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
+  coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
+
+  double expectedDist = displacementFromDistanceSensor.x * currentBearingVector[2] + displacementFromDistanceSensor.z * currentBearingVector[0];
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
-  cout << "Expected distance: " << expectedDist << "   actual distance:" << distance << endl;
-  get<0>(targetPosition) += (distance - get<0>(frontOfRobotDisplacement) - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
-  get<1>(targetPosition) += (distance - get<0>(frontOfRobotDisplacement) - expectedDist) * currentBearingVector[0] * distanceMeasurementWeight;
+  if (expectedDist > ULTRASOUND_MIN_DISTANCE) {
+    targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
+    targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[0] * distanceMeasurementWeight;
+  }
 }
 
 bool hasReachedPosition() {
@@ -60,17 +62,17 @@ bool hasFinishedTurning() {
   return !turningStage;
 }
 
-tuple<double, double> moveToPosition(tuple<double, double> currentPosition, const double* currentBearingVector) {
+tuple<double, double> moveToPosition(coordinate currentPosition, const double* currentBearingVector) {
 
-  tuple<double, double> displacement(get<0>(targetPosition) - get<0>(currentPosition), get<1>(targetPosition) - get<1>(currentPosition));
+  coordinate displacement = targetPosition - currentPosition;
   double target_bearing = getBearing(displacement);
   double current_bearing = getCompassBearing(currentBearingVector);
 
   double turning_speed = 0.0;
   double forward_speed = 0.0;
 
-  double distance_to_target = get<0>(displacement) * currentBearingVector[2]
-    + get<1>(displacement) * currentBearingVector[0];  // dot product taking into account the compass orientation
+  double distance_to_target = displacement.x * currentBearingVector[2]
+    + displacement.z * currentBearingVector[0];  // dot product taking into account the compass orientation
 
   if (turningStage) {
     turning_speed = turnToBearing(target_bearing, current_bearing);
@@ -111,16 +113,16 @@ double getPIDOutput(double error, PIDGains gains, PIDState state) {
   return (abs(error) > gains.moveThresh) ? error * gains.kp + state.integral + diff : 0;
 }
 
-tuple<double, double> getPositionInfrontOfBlock(tuple<double, double> blockPosition, tuple<double, double> robotPosition) {
-  tuple<double, double> displacement(get<0>(blockPosition) - get<0>(robotPosition), get<1>(blockPosition) - get<1>(robotPosition));
+coordinate getPositionInfrontOfBlock(coordinate blockPosition, coordinate robotPosition) {
+  coordinate displacement = blockPosition - robotPosition;
   double target_bearing = getBearing(displacement);
 
-  tuple<double, double> rotatedGrabberDisp = rotateVector(frontOfRobotDisplacement, target_bearing);
-  return tuple<double, double>(get<0>(blockPosition) - get<0>(rotatedGrabberDisp), get<1>(blockPosition) - get<1>(rotatedGrabberDisp));
+  coordinate rotatedGrabberDisp = rotateVector(frontOfRobotDisplacement, target_bearing);
+  return blockPosition - rotatedGrabberDisp;
 }
 
-tuple<double, double> getBlockPosition(tuple<double, double> afterLastJump, tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
-  const double* robot_pos, const double sensorBeamAngle) {
+coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
+  coordinate robotPosition, const double sensorBeamAngle) {
   double blockAvgDistance = 0;
   double blockAvgAngle = 0;
 
@@ -144,8 +146,8 @@ tuple<double, double> getBlockPosition(tuple<double, double> afterLastJump, tupl
     cout << "Not possible to accurately find block, ignoring" << endl;
   }
 
-  tuple<double, double> rotatedSensorDisp = rotateVector(distanceSensorDisplacement, blockAvgAngle);
-  double block_x = robot_pos[0] + get<0>(rotatedSensorDisp) + blockAvgDistance * cos(blockAvgAngle * DEG_TO_RAD);
-  double block_z = robot_pos[2] + get<1>(rotatedSensorDisp) + blockAvgDistance * sin(blockAvgAngle * DEG_TO_RAD);
-  return tuple<double, double>(block_x, block_z);
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, blockAvgAngle);
+  double block_x = robotPosition.x + rotatedSensorDisp.x + blockAvgDistance * cos(blockAvgAngle * DEG_TO_RAD);
+  double block_z = robotPosition.z + rotatedSensorDisp.z + blockAvgDistance * sin(blockAvgAngle * DEG_TO_RAD);
+  return coordinate(block_x, block_z);
 }

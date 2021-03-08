@@ -28,6 +28,7 @@
 #include "Motors.hpp"
 #include "Servos.hpp"
 #include "Utility.hpp"
+#include "Coordinate.hpp"
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -37,8 +38,8 @@ using namespace std;
 
 bool scan_for_blocks();
 void drive_to_block(void);
-vector<tuple<double, double>> scanForBlocks(int timeStep);
-void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions);
+vector<coordinate> scanForBlocks(int timeStep);
+void moveToBlocks(int timeStep, vector<coordinate> blockPositions);
 void sensorHeatUp(int timeStep, int warmupLength);
 
 bool BLOCK_DETECTED = 0;
@@ -63,11 +64,11 @@ int main(int argc, char** argv) {
   int timeStep = (int)robot->getBasicTimeStep();
   sensorHeatUp(timeStep, 5);
 
-  vector<tuple<double, double>>targetPoints = scanForBlocks(timeStep);
+  vector<coordinate>targetPoints = scanForBlocks(timeStep);
 
   cout << "Blocks found: " << endl;
   for (int k = 0; k < targetPoints.size(); k++) {
-    cout << "( " << get<0>(targetPoints[k]) << ", " << get<1>(targetPoints[k]) << ") " << endl;
+    cout << "( " << targetPoints[k].x << ", " << targetPoints[k].z << ") " << endl;
   }
 
   moveToBlocks(timeStep, targetPoints);
@@ -104,14 +105,14 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-vector< tuple<double, double> > scanForBlocks(int timeStep) {
+vector<coordinate> scanForBlocks(int timeStep) {
   const int measureTimeInterval = 1;  // wait this many simulation timesteps before measuring
   const tuple<double, double> motorTurnSpeed(0.5, -0.5);
   const double blockDetectThresh = 0.05;  // detect changes in ultrasound measuruments greater than this
 
   int i = 0;
 
-  vector< tuple<double, double>> blockPositions;
+  vector<coordinate> blockPositions;
 
   double lastDistance = getDistanceMeasurement(ds1);
   double distance = lastDistance;
@@ -119,6 +120,7 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
   double bearing = lastBearing;
   double wallDistance;
   const double* robotPos;
+  coordinate robotPosition;
 
   bool firstJump = true;
   tuple<double, double> afterLastJump;
@@ -147,7 +149,8 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
 
     if (i == 0) {
       robotPos = getlocation(gps);
-      wallDistance = getWallDistance(robotPos, bearing, distanceSensorDisplacement);
+      robotPosition = coordinate(robotPos[0], robotPos[2]);
+      wallDistance = getWallDistance(robotPosition, bearing);
 
       if (abs(distance - lastDistance) > blockDetectThresh) {
         afterLastJump = afterJump;
@@ -167,7 +170,7 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
         }
 
         if (get<0>(beforeJump) < wallDistance - blockDetectThresh) {
-          blockPositions.push_back(getBlockPosition(afterLastJump, beforeJump, lastJumpWasFall, jumpWasFall, robotPos, ULTRASOUND_BEAM_ANGLE));
+          blockPositions.push_back(getBlockPosition(afterLastJump, beforeJump, lastJumpWasFall, jumpWasFall, robotPosition, ULTRASOUND_BEAM_ANGLE));
         }
       }
     }
@@ -176,11 +179,11 @@ vector< tuple<double, double> > scanForBlocks(int timeStep) {
   return blockPositions;
 }
 
-void moveToBlocks(int timeStep, vector<tuple<double, double>> blockPositions) {
+void moveToBlocks(int timeStep, vector<coordinate> blockPositions) {
   int i = 0;
   const double* pos = getlocation(gps);
-  tuple<double, double> position(pos[0], pos[2]);
-  tuple<double, double> nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
+  coordinate position(pos[0], pos[2]);
+  coordinate nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
   updateTargetPosition(nextTarget);
 
   while (robot->step(timeStep) != -1) {
