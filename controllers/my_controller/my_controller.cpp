@@ -55,7 +55,7 @@ Motor* gripperservo = initServo(robot, "gripper motor");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
-tuple<LightSensor*, LightSensor*> colour_sensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
+tuple<LightSensor*, LightSensor*> colourSensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
@@ -187,6 +187,21 @@ void moveToBlocks(int timeStep, vector<coordinate> blockPositions) {
   updateTargetPosition(nextTarget);
 
   while (robot->step(timeStep) != -1) {
+    /*
+    * This should go somewhere else
+    bool redLDR, greenLDR;
+    tie(redLDR, greenLDR) = getLightMeasurement(colourSensor);
+    if (redLDR && !greenLDR) {
+      cout << "Red!" << endl;
+    }
+    if (greenLDR && !redLDR) {
+      cout << "Green!" << endl;
+    }
+    if (greenLDR && redLDR) {
+      cout << "Overload" << endl;
+    }
+    */
+
     const double* bearing = getDirection(compass);
     pos = getlocation(gps);
 
