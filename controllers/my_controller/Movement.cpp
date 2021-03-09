@@ -45,7 +45,7 @@ void tweakBlockDistanceFromMeasurement(coordinate robotPosition, const double* c
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
-  double expectedDist = displacementFromDistanceSensor.x * currentBearingVector[2] + displacementFromDistanceSensor.z * currentBearingVector[0];
+  double expectedDist = displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   if (expectedDist > ULTRASOUND_MIN_DISTANCE) {
@@ -71,8 +71,9 @@ tuple<double, double> moveToPosition(coordinate currentPosition, const double* c
   double turning_speed = 0.0;
   double forward_speed = 0.0;
 
-  double distance_to_target = displacement.x * currentBearingVector[1]
-    + displacement.z * currentBearingVector[0];  // dot product taking into account the compass orientation
+  double distance_to_target = displacement.x * -currentBearingVector[0]
+    + displacement.z * currentBearingVector[2];  // dot product taking into account the compass orientation
+  cout << "Distance: " <<  distance_to_target << endl;
 
   if (turningStage) {
     turning_speed = turnToBearing(target_bearing, current_bearing);

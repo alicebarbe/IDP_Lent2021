@@ -144,6 +144,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
     lastBearing = bearing;
     distance = getDistanceMeasurement(ds1);
     bearing = getCompassBearing(getDirection(compass));
+    cout << bearing << endl;
 
     if (lastBearing < endBearing && bearing >= endBearing) {
       setMotorVelocity(motors, tuple<double, double>(0, 0));
