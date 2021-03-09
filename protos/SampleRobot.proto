@@ -228,7 +228,7 @@ Robot {
           }
         }
       ]
-      name "ds_right"
+      name "ds"
     }
     DEF emitter Emitter{
     name "emitter"
