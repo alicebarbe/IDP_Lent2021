@@ -16,7 +16,7 @@ using namespace std;
 * bearing of the vector in the direction the robot faces
 */
 double getCompassBearing(const double* vector) {
-  double rad = atan2(vector[0], vector[2]);
+  double rad = atan2(vector[0], vector[1]);
   double bearing = rad * RAD_TO_DEG;
   if (bearing < 0.0)
     bearing = bearing + 360.0;

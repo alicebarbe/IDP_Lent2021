@@ -49,7 +49,7 @@ void tweakBlockDistanceFromMeasurement(coordinate robotPosition, const double* c
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   if (expectedDist > ULTRASOUND_MIN_DISTANCE) {
-    targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
+    targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * currentBearingVector[1] * distanceMeasurementWeight;
     targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[0] * distanceMeasurementWeight;
   }
 }
@@ -71,7 +71,7 @@ tuple<double, double> moveToPosition(coordinate currentPosition, const double* c
   double turning_speed = 0.0;
   double forward_speed = 0.0;
 
-  double distance_to_target = displacement.x * currentBearingVector[2]
+  double distance_to_target = displacement.x * currentBearingVector[1]
     + displacement.z * currentBearingVector[0];  // dot product taking into account the compass orientation
 
   if (turningStage) {

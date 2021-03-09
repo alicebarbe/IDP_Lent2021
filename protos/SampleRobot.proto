@@ -66,7 +66,7 @@ Robot {
           Solid {
             children [
               LightSensor {
-                translation -0.0425 0.020 0.00
+                translation -0.0425 0.040 0.00
                 rotation 0 0 1 -1.5707996938995747
                 lookupTable [0 0 0, 3 1023 0]
                 colorFilter 1 0 0
@@ -86,7 +86,7 @@ Robot {
                 ]
               }
               LightSensor {
-                translation -0.0425 0.020 -0.005
+                translation -0.0425 0.040 -0.005
                 rotation 0 0 1 -1.5707996938995747
                 lookupTable [0 0 0, 3 1023 0]
                 colorFilter 0 1 0
