@@ -1,18 +1,12 @@
 PROTO ChangeLDRDesign [
   field  SFVec3f     translation     0 0 0
   field  SFRotation  rotation        1 0 0 -1.5708
-  field  SFString    name            "RobotAssemblyTemp"  # Is `Robot.name`.
-  field  SFString    controller      "RobotAssemblyTemp_controller"               # Is `Robot.controller`.
-  field  MFString    controllerArgs  []                   # Is `Robot.controllerArgs`.
-  field  SFString    customData      ""                   # Is `Robot.customData`.
-  field  SFBool      supervisor      FALSE                # Is `Robot.supervisor`.
-  field  SFBool      synchronization TRUE                 # Is `Robot.synchronization`.
-  field  SFBool      selfCollision   FALSE                # Is `Robot.selfCollision`.
+ 
 ]
 {
 Robot {
-  translation 0 0.045 -2.93856e-07
-  rotation 1 0 0 -1.5708
+  translation IS translation
+  rotation IS rotation
   children [
     Compass {
       translation 0.080065 -0.004 0.030971
@@ -37,6 +31,7 @@ Robot {
           }
         }
       ]
+      name "gps"
     }
     Solid {
       translation -0.130635 -0.003767 -0.046829
@@ -131,7 +126,7 @@ Robot {
       }
       device [
         RotationalMotor {
-          name "Wheel1"
+          name "wheel1"
           maxTorque 10000
         }
         PositionSensor {
@@ -161,7 +156,7 @@ Robot {
       }
       device [
         RotationalMotor {
-          name "Wheel2"
+          name "wheel2"
           maxTorque 1
         }
         PositionSensor {
@@ -215,7 +210,7 @@ Robot {
           }
           device [
             RotationalMotor {
-              name "Trap_door"
+              name "trap_door"
               maxTorque 0.35
             }
             PositionSensor {
@@ -228,9 +223,11 @@ Robot {
             children [
               DEF LDR Solid {
                 translation 0.00435 -0.0299 0.00679
+                lookupTable [0 0 0, 3 1023 0]
+                colorFilter 1 0 0
                 children [
                   LightSensor {
-                    translation 0.0024 0 0.02375
+                    translation 0.0024 0.005 0.02375
                     children [
                       Shape {
                         appearance PBRAppearance {
@@ -242,6 +239,30 @@ Robot {
                         }
                       }
                     ]
+                name "light_sensor_red"
+                recognitionColors [
+                  0 0 0
+                  ]
+                  }
+                   LightSensor {
+                    translation 0.0024 -0.005 0.02375
+                    lookupTable [0 0 0, 3 1023 0]
+                    colorFilter 0 1 0
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.2 0.2 0.2
+                          metalness 0
+                        }
+                        geometry Sphere {
+                          radius 0.003
+                        }
+                      }
+                    ]
+                name "light_sensor_green"
+                recognitionColors [
+                  0 0 0
+                  ]
                   }
                   DEF board Shape {
                     appearance PBRAppearance {
@@ -259,7 +280,9 @@ Robot {
                 }
               }
               DistanceSensor {
-                translation 0.0025 -0.029917 -0.024739
+                translation 0.0025 -0.029917 -0.02473
+                lookupTable[ 0 0 0, 2.4 2.4 0]
+                rotation  0.9995 0 -0.02 -1.570796
                 children [
                   Shape {
                     geometry Sphere {
@@ -267,6 +290,7 @@ Robot {
                     }
                   }
                 ]
+                name "ds"                
               }
               Transform {
                 translation -0.159815 -0.026233 -0.027971
@@ -360,7 +384,7 @@ Robot {
           }
           device [
             RotationalMotor {
-              name "Pole"
+              name "gripper motor"
               maxTorque 0.35
             }
             PositionSensor {
@@ -433,6 +457,16 @@ Robot {
         ]
       }
     }
+    DEF emitter Emitter{
+    name "emitter"
+    type "serial"
+    byteSize 8
+    }
+    DEF receiver Receiver{
+    name  "receiver"
+    type "serial"
+    byteSize 8
+    }
   ]
   name "RobotAssemblyTemp"
   boundingObject USE base_link
@@ -447,6 +481,6 @@ Robot {
       4e-05 -0.001716 2.6e-05
     ]
   }
-  controller "epuck_go_forward"
+  controller "my_controller"
 }
 }

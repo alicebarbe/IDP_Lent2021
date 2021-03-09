@@ -46,7 +46,7 @@ vector<coordinate> targetPoints;
 Robot *robot = new Robot();
 tuple<Motor*, Motor*> motors = initMotors(robot, "wheel1", "wheel2");
 Motor* gripperservo = initServo(robot, "gripper motor");
-DistanceSensor* ds1 = initDistanceSensor(robot, "ds_right");
+DistanceSensor* ds1 = initDistanceSensor(robot, "ds");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
 tuple<LightSensor*, LightSensor*> colourSensor = initLightSensor(robot, "light_sensor_red", "light_sensor_green");
