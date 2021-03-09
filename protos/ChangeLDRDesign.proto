@@ -121,12 +121,12 @@ Robot {
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        axis 0 -1 0
+        axis 0 1 0
         anchor 0.080065 -0.084767 0.003827
       }
       device [
         RotationalMotor {
-          name "wheel1"
+          name "wheel2"
           maxTorque 10000
         }
         PositionSensor {
@@ -151,12 +151,12 @@ Robot {
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        axis 0 -1 0
+        axis 0 1 0
         anchor 0.080065 0.081233 0.003971
       }
       device [
         RotationalMotor {
-          name "wheel2"
+          name "wheel1"
           maxTorque 1
         }
         PositionSensor {
