@@ -7,6 +7,9 @@
 
 #include "Coordinate.hpp"
 
+#define RED_ROBOT 2
+#define GREEN_ROBOT 1
+
 inline const double RPM_TO_RAD_S = M_PI / 30.0;
 inline const double DEG_TO_RAD  = M_PI / 180.0;
 inline const double RAD_TO_DEG  = 180.0 / M_PI;

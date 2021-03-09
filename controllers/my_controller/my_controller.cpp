@@ -34,19 +34,13 @@
 using namespace webots;
 using namespace std;
 
-//typedef tuple<int, double, double> message;
-
-bool scan_for_blocks();
-void drive_to_block(void);
 vector<coordinate> scanForBlocks(int timeStep);
-void moveToBlocks(int timeStep, vector<coordinate> blockPositions);
+void moveToBlock(int timeStep, coordinate blockPosition);
 void sensorHeatUp(int timeStep, int warmupLength);
+void sendBlockPositions(vector<coordinate> blockPositions);
 
-bool BLOCK_DETECTED = 0;
-
-double val1 = 0;
-static double oldval1 = 0;
-double blockdistance = 0;
+int robotColour;
+vector<coordinate> targetPoints;
 
 // Webots sensors/actuators
 Robot *robot = new Robot();
@@ -64,7 +58,38 @@ int main(int argc, char** argv) {
   int timeStep = (int)robot->getBasicTimeStep();
   sensorHeatUp(timeStep, 5);
 
+  // identify what colour robot 
+
+  if (getLocation(gps)[2] > 0) robotColour = RED_ROBOT; else robotColour = GREEN_ROBOT;
+  sayHello(robotColour, emitter);
+  sendRobotLocation(gps, robotColour, emitter);
+
+  while (robot->step(timeStep) != -1) {
+    message* receivedData = receiveData(receiver);
+    if (receivedData) {
+      if (floor(get<0>(*receivedData) / 10) == robotColour) {
+        cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
+        switch (get<0>(*receivedData) % 10) {
+        case(8):
+          targetPoints = scanForBlocks(timeStep);
+          sendRobotLocation(gps, robotColour, emitter);
+          sendBlockPositions(targetPoints);
+          sendFinishedScan(robotColour, emitter);
+          break;
+        case(0):
+          cout << "Im starting to move" << endl;
+          coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+          moveToBlock(timeStep, blockPosition);
+          break;
+        }
+      }
+    }
+  }
+
+
+  /*
   vector<coordinate>targetPoints = scanForBlocks(timeStep);
+  // send the blocks one by one to server
 
   cout << "Blocks found: " << endl;
   for (int k = 0; k < targetPoints.size(); k++) {
@@ -74,41 +99,22 @@ int main(int argc, char** argv) {
   moveToBlocks(timeStep, targetPoints);
 
   // - perform simulation steps until Webots is stopping the controller
-  while (robot->step(timeStep) != -1) {
-    // Read the sensors:
-    oldval1 = val1;
-    val1 = getDistanceMeasurement(ds1);
-       
-    if(!BLOCK_DETECTED){
-      scan_for_blocks();
-    }
-    else {
-      static char i = 0;
-      if (i == 0) {
-        message yessir{};
-        yessir = { 14 ,1.1,2.4 };
-        const void* alpha = &yessir;
-               
-        emitData(emitter, alpha, 17);//"block found", 12);
-        i++;
-        }
-      drive_to_block();
-    }
-    //char* received_data = receiveData(receiver);
-    /* if(received_data){
-        string data_string(received_data);
-        cout << data_string << endl;
-    }*/
-
-  }
+  */
   delete robot;
   return 0;
+}
+
+void sendBlockPositions(vector<coordinate> blockPositions) {
+  for (auto it = blockPositions.begin(); it != blockPositions.end(); it++) {
+    sendBlockLocation(*it, robotColour, emitter);
+  }
 }
 
 vector<coordinate> scanForBlocks(int timeStep) {
   const int measureTimeInterval = 1;  // wait this many simulation timesteps before measuring
   const tuple<double, double> motorTurnSpeed(0.5, -0.5);
   const double blockDetectThresh = 0.05;  // detect changes in ultrasound measuruments greater than this
+  const double angleToRotate = 160;
 
   int i = 0;
 
@@ -129,6 +135,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
   bool jumpWasFall = true;
 
   double startBearing = bearing;
+  double endBearing = (startBearing + angleToRotate) > 360 ? (startBearing + angleToRotate - 360) : startBearing + angleToRotate;
   bool crossedNorthOnce = false;
   setMotorVelocity(motors, motorTurnSpeed);
 
@@ -138,17 +145,15 @@ vector<coordinate> scanForBlocks(int timeStep) {
     distance = getDistanceMeasurement(ds1);
     bearing = getCompassBearing(getDirection(compass));
 
-    if (!crossedNorthOnce && bearing < startBearing) {
-      crossedNorthOnce = true;
-    }
-    if (crossedNorthOnce && bearing > startBearing) {
+    if (lastBearing < endBearing && bearing >= endBearing) {
+      setMotorVelocity(motors, tuple<double, double>(0, 0));
       break;
     }
 
     i = (i + 1) % measureTimeInterval;
 
     if (i == 0) {
-      robotPos = getlocation(gps);
+      robotPos = getLocation(gps);
       robotPosition = coordinate(robotPos[0], robotPos[2]);
       wallDistance = getWallDistance(robotPosition, bearing);
 
@@ -179,31 +184,15 @@ vector<coordinate> scanForBlocks(int timeStep) {
   return blockPositions;
 }
 
-void moveToBlocks(int timeStep, vector<coordinate> blockPositions) {
-  int i = 0;
-  const double* pos = getlocation(gps);
+void moveToBlock(int timeStep, coordinate blockPosition) {
+  const double* pos = getLocation(gps);
   coordinate position(pos[0], pos[2]);
-  coordinate nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
+  coordinate nextTarget = getPositionInfrontOfBlock(blockPosition, position);
   updateTargetPosition(nextTarget);
 
   while (robot->step(timeStep) != -1) {
-    /*
-    * This should go somewhere else
-    bool redLDR, greenLDR;
-    tie(redLDR, greenLDR) = getLightMeasurement(colourSensor);
-    if (redLDR && !greenLDR) {
-      cout << "Red!" << endl;
-    }
-    if (greenLDR && !redLDR) {
-      cout << "Green!" << endl;
-    }
-    if (greenLDR && redLDR) {
-      cout << "Overload" << endl;
-    }
-    */
-
     const double* bearing = getDirection(compass);
-    pos = getlocation(gps);
+    pos = getLocation(gps);
 
     position = make_tuple(pos[0], pos[2]);
     tuple<double, double> motor_speeds = moveToPosition(position, bearing);
@@ -213,12 +202,7 @@ void moveToBlocks(int timeStep, vector<coordinate> blockPositions) {
       tweakBlockDistanceFromMeasurement(position, bearing, distance);
     }
     if (hasReachedPosition()) {
-      cout << "Arrived!" << endl;
-      if (++i >= blockPositions.size()) {
-        break;
-      }
-      nextTarget = getPositionInfrontOfBlock(blockPositions[i], position);
-      updateTargetPosition(nextTarget);
+      break;
     }
   }
 }
@@ -232,45 +216,3 @@ void sensorHeatUp(int timeStep, int warmupLength) {
     }
   }
 }
-
-bool scan_for_blocks(){ 
-  static char i = 0;
-  static bool SENSORHEATUP = 0;
-     
-  
-  if (i<3){
-    SENSORHEATUP = 1;
-    i+=1;}
-  else{SENSORHEATUP = 0;}
-       
-
-  if(std::abs(val1-oldval1) > 0.05 && !SENSORHEATUP)
-  {
-    setMotorVelocity(motors, tuple<double, double>(0.0, -0.0));
-    BLOCK_DETECTED = 1;
-    blockdistance = val1;
-  }
-       
-  else if(!BLOCK_DETECTED){
-    setMotorVelocity(motors, tuple<double, double>(0.5, -0.5));
-  }
-
-  oldval1 = val1;
-  return(BLOCK_DETECTED);
-}
-     
-void drive_to_block(){
-  if(val1-blockdistance > 0.1){
-    setMotorVelocity(motors, tuple<double, double>(0.5, -0.5));
-  }
-  else if(blockdistance > 0.05){
-    setMotorVelocity(motors, tuple<double, double>(6.0, 6.0));
-    blockdistance = val1;
-  }
-  else {
-    setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
-    openGripper(gripperservo);
-    blockdistance = val1;
-  }
-}
-

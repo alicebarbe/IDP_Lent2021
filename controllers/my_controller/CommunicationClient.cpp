@@ -1,4 +1,5 @@
 #include "CommunicationClient.hpp"
+#include "Coordinate.hpp"
 #include <webots/robot.hpp>
 #include <webots/GPS.hpp>
 #include <tuple>
@@ -13,7 +14,7 @@ GPS* initGPS(Robot* robot, const char* name) {							//initialises GPS module fo
 	return gps;															//returns gps,  a pointer to GPS
 }
 
-const double* getlocation(GPS* gps) {
+const double* getLocation(GPS* gps) {
 	return gps->getValues();
 }
 
@@ -51,4 +52,26 @@ message* receiveData(Receiver* receiver) {
 	}
 	else return 0;
 	
+}
+
+void sayHello(int robotIdentifier, Emitter* emitter) {
+	const message locationMessage(robotIdentifier * 10 + 1, 0, 0);
+	emitData(emitter, (const void*)&locationMessage, 20);
+}
+
+
+void sendRobotLocation(GPS* gps, int robotIdentifier, Emitter* emitter) {
+	const double* robotPos = getLocation(gps);
+	const message locationMessage(robotIdentifier * 10 + 2, robotPos[0], robotPos[2]);
+	emitData(emitter,(const void*) &locationMessage, 20);
+}
+
+void sendBlockLocation(coordinate blockPos, int robotIdentifier, Emitter* emitter) {
+	const message locationMessage(robotIdentifier * 10 + 5, blockPos.x, blockPos.z);
+	emitData(emitter, (const void*)&locationMessage, 20);
+}
+
+void sendFinishedScan(int robotIdentifier, Emitter* emitter) {
+	const message locationMessage(robotIdentifier * 10 + 6, 0, 0);
+	emitData(emitter, (const void*)&locationMessage, 20);
 }
