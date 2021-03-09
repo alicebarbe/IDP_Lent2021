@@ -56,23 +56,27 @@ int main(int argc, char** argv) {
 
 
 	while (server->step(timeStep) != -1) {
+		
 
 		message* received_data = receiveData(receiver);
-		switch (get<0>(*received_data)) {
-		case(11):tell_robot_scan(1); break;																//green robot has sent hello message
-		case(21):tell_robot_scan(2); break;																//red robot has sent hello message
-		case(15):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), false); break;			//add found block location from scan to list for green
-		case(25):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), false); break;			//add found block location from scan to list for red
-		case(12):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
-		case(22):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
-		case(13):break;																					//green robot has found a green block, Good!
-		case(14):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), true); break;			//green robot has found a red block, add it to red list
-		case(23):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), true); break;			//red robot has found a green block, add it to green list
-		case(24):break;																					//red robot has found a red block, Good!
-		case(16):pathfind(1); break;																	//green robot has finished scan, tell it where to go next
-		case(26):pathfind(2); break;																	//red robot has finished scan, tell it wehre to go next
-		case(17):green_target_list.erase(green_target_list.begin()); pathfind(1); break;				//green robot has dealt with its block, remove it from its list and tell it where to go next
-		case(27):red_target_list.erase(red_target_list.begin()); pathfind(2); break;					//red robot has dealt with its block, remove it from its list and tell it where to go next
+
+		if (received_data) {
+			switch (get<0>(*received_data)) {
+			case(11):tell_robot_scan(1); break;																//green robot has sent hello message
+			case(21):tell_robot_scan(2); break;																//red robot has sent hello message
+			case(15):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), false); break;			//add found block location from scan to list for green
+			case(25):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), false); break;			//add found block location from scan to list for red
+			case(12):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
+			case(22):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
+			case(13):break;																					//green robot has found a green block, Good!
+			case(14):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), true); break;			//green robot has found a red block, add it to red list
+			case(23):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), true); break;			//red robot has found a green block, add it to green list
+			case(24):break;																					//red robot has found a red block, Good!
+			case(16):pathfind(1); break;																	//green robot has finished scan, tell it where to go next
+			case(26):pathfind(2); break;																	//red robot has finished scan, tell it wehre to go next
+			case(17):green_target_list.erase(green_target_list.begin()); pathfind(1); break;				//green robot has dealt with its block, remove it from its list and tell it where to go next
+			case(27):red_target_list.erase(red_target_list.begin()); pathfind(2); break;					//red robot has dealt with its block, remove it from its list and tell it where to go next
+			}
 		}
 	
 		
@@ -82,6 +86,8 @@ int main(int argc, char** argv) {
 			//cout << "server receives:  " << get<0>(*received_data) << "  " << get<1>(*received_data) << "  " << get<2>(*received_data) << endl;
 		//};
 
+		
+		
 
 	}
 		delete server;
