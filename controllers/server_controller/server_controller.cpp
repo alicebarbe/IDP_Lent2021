@@ -29,6 +29,7 @@ void tell_robot_scan(int robot_identifier);
 void add_block_to_list(int identifier, double x_coordinate, double z_coordinate, bool known_colour);
 void pathfind(int robot_identifier);
 double distance_from_robot(int robot_identifier, double x_coordinate, double z_coordinate);
+void tell_robot_go_home(int robot_identifier);
 
 
 
@@ -51,13 +52,8 @@ char red_blocks_collected = 0;
 
 int main(int argc, char** argv) {
 
-	
-
-
 	// get the time step of the current world.
 	int timeStep = (int)server->getBasicTimeStep();
-
-
 
 
 	while (server->step(timeStep) != -1) {
@@ -68,20 +64,24 @@ int main(int argc, char** argv) {
 		if (received_data) {
 			cout << "Server: " << get<0>(*received_data) << " , "<< get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
 			switch (get<0>(*received_data)) {
-			case(11):tell_robot_scan(1); green_scan_complete = false; break;								//green robot has sent hello message
-			case(21):tell_robot_scan(2); red_scan_complete = false; break;									//red robot has sent hello message
-			case(15):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), false); break;	//add found block location from scan to list for green
-			case(25):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), false); break;	//add found block location from scan to list for red
-			case(12):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
-			case(22):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
-			case(13):break;																					//green robot has found a green block, Good!
-			case(14):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true); break;		//green robot has found a red block, add it to red list
-			case(23):add_block_to_list(1, get<1>(red_target_list[0]), get<2>(red_target_list[0]), true); break;		//red robot has found a green block, add it to green list
-			case(24):break;																					//red robot has found a red block, Good!
-			case(16):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
-			case(26):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go
-			case(17):green_target_list.erase(green_target_list.begin()); pathfind(1); break;				//green robot has dealt with its block, remove it from its list and tell it where to go next
-			case(27):red_target_list.erase(red_target_list.begin()); pathfind(2); break;					//red robot has dealt with its block, remove it from its list and tell it where to go next
+			case(110):tell_robot_scan(1); green_scan_complete = false; break;								//green robot has sent hello message
+			case(210):tell_robot_scan(2); red_scan_complete = false; break;									//red robot has sent hello message
+			case(150):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), false); break;	//add found block location from scan to list for green
+			case(250):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), false); break;	//add found block location from scan to list for red
+			case(120):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
+			case(220):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
+			case(130):green_blocks_collected++;  break;																					//green robot has found a green block, Good!
+			case(140):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true); break;		//green robot has found a red block, add it to red list
+			case(230):add_block_to_list(1, get<1>(red_target_list[0]), get<2>(red_target_list[0]), true); break;		//red robot has found a green block, add it to green list
+			case(240):red_blocks_collected++; break;																					//red robot has found a red block, Good!
+			case(160):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
+			case(260):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go
+			case(170):green_target_list.erase(green_target_list.begin());
+				if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
+				pathfind(1); break;																			//green robot has dealt with its block, remove it from its list and tell it where to go next
+			case(270):red_target_list.erase(red_target_list.begin());
+				if (red_blocks_collected == 4) { tell_robot_go_home(2); break; }
+				pathfind(2); break;																			//red robot has dealt with its block, remove it from its list and tell it where to go next
 			}
 		}
 	
@@ -130,9 +130,9 @@ message* receiveData(Receiver* receiver) {
 void tell_robot_scan(int robot_identifier) {							//outputs a message telling the green robot to scan for blocks
 	message scan_message{};
 	if(robot_identifier == 1)
-		scan_message = { 18, 0.0 , 0.0 };								//1 means addressing green robot, 8 means telling it to scan
+		scan_message = { 180, 0.0 , 0.0 };								//1 means addressing green robot, 8 means telling it to scan
 	else if (robot_identifier == 2)
-		scan_message = { 28, 0.0, 0.0 };								//2 means addressing red robot
+		scan_message = { 280, 0.0, 0.0 };								//2 means addressing red robot
 	emitData(emitter, (const void*) &scan_message, 20);	
 }
 
@@ -165,7 +165,7 @@ void pathfind(int robot_identifier) {
 			get<0>(green_target_list[i]) = distance_from_robot(1, get<1>(green_target_list[i]), get<2>(green_target_list[i]));
 		}
 		sort(green_target_list.begin(), green_target_list.end());						//sort green lists into ascending order of distance
-		new_target_message = { 10, get<1>(green_target_list[0]), get<2>(green_target_list[0]) }; //send next target (the closest)
+		new_target_message = { 100, get<1>(green_target_list[0]), get<2>(green_target_list[0]) }; //send next target (the closest)
 		emitData(emitter, (const void*) &new_target_message, 20);
 	}
 	if (robot_identifier == 2 || robot_identifier == 3) {
@@ -174,7 +174,7 @@ void pathfind(int robot_identifier) {
 			get<0>(red_target_list[i]) = distance_from_robot(2, get<1>(red_target_list[i]), get<2>(red_target_list[i]));
 		}
 		sort(red_target_list.begin(), red_target_list.end());
-		new_target_message = { 20, get<1>(red_target_list[0]), get<2>(red_target_list[0]) };
+		new_target_message = { 200, get<1>(red_target_list[0]), get<2>(red_target_list[0]) };
 		emitData(emitter, (const void*) &new_target_message, 20);
 	}
 
@@ -189,5 +189,20 @@ double distance_from_robot(int robot_identifier, double x_coordinate, double z_c
 	if (robot_identifier == 2)
 	{
 		return  sqrt(pow((x_coordinate - get<0>(red_position)), 2) + pow((z_coordinate - get<1>(red_position)), 2));	// use pythagoras to get distance to coordiantes from red robot
+	}
+}
+
+void tell_robot_go_home(int robot_identifier) {
+	if (robot_identifier == 1)
+	{
+		message new_target_message{};
+		new_target_message = { 100, 0, -0.4 };														//send next target green home
+		emitData(emitter, (const void*)&new_target_message, 20); 
+	}
+	else if (robot_identifier == 2)
+	{
+		message new_target_message{};
+		new_target_message = { 200, 0, 0.4 };														//send next target green home
+		emitData(emitter, (const void*)&new_target_message, 20);
 	}
 }

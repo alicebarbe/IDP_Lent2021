@@ -55,33 +55,33 @@ message* receiveData(Receiver* receiver) {
 }
 
 void sayHello(int robotIdentifier, Emitter* emitter) {
-	const message locationMessage(robotIdentifier * 10 + 1, 0, 0);
+	const message locationMessage(robotIdentifier * 100 + 10, 0, 0);
 	emitData(emitter, (const void*)&locationMessage, 20);
 }
 
 
 void sendRobotLocation(GPS* gps, int robotIdentifier, Emitter* emitter) {
 	coordinate robotPos = getLocation(gps);
-	const message locationMessage(robotIdentifier * 10 + 2, robotPos.x, robotPos.z);
+	const message locationMessage(robotIdentifier * 100 + 20, robotPos.x, robotPos.z);
 	emitData(emitter,(const void*) &locationMessage, 20);
 }
 
 void sendBlockLocation(coordinate blockPos, int robotIdentifier, Emitter* emitter) {
-	const message locationMessage(robotIdentifier * 10 + 5, blockPos.x, blockPos.z);
+	const message locationMessage(robotIdentifier * 100 + 50, blockPos.x, blockPos.z);
 	emitData(emitter, (const void*)&locationMessage, 20);
 }
 
 void sendFinishedScan(int robotIdentifier, Emitter* emitter) {
-	const message locationMessage(robotIdentifier * 10 + 6, 0, 0);
+	const message locationMessage(robotIdentifier * 100 + 60, 0, 0);
 	emitData(emitter, (const void*)&locationMessage, 20);
 }
 
 void sendBlockColour(int robotIdentifier, Emitter* emitter, int colour) {
-	const message blockColourMessage(robotIdentifier * 10 + (colour+2), 0, 0);
+	const message blockColourMessage(robotIdentifier * 100 + (colour+2)*10, 0, 0);
 	emitData(emitter, (const void*)&blockColourMessage, 20);
 }
 
 void sendDealtwithBlock(int robotIdentifier, Emitter* emitter) {
-	const message DealtwithBlockMessage(robotIdentifier * 10 + 7, 0, 0);
+	const message DealtwithBlockMessage(robotIdentifier * 100 + 70, 0, 0);
 	emitData(emitter, (const void*)&DealtwithBlockMessage, 20);
 }

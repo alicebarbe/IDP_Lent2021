@@ -74,17 +74,17 @@ int main(int argc, char** argv) {
   while (robot->step(timeStep) != -1) {
     message* receivedData = receiveData(receiver);
     if (receivedData) {
-      if (floor(get<0>(*receivedData) / 10) == robotColour) {
+      if (floor(get<0>(*receivedData) / 100) == robotColour) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
-        switch (get<0>(*receivedData) % 10) {
-        case(8):
+        switch (get<0>(*receivedData) % 100) {
+        case(80):
           turnToBearing(timeStep, (robotColour == RED_ROBOT) ? 60 : 240);
           targetPoints = scanForBlocks(timeStep);
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
           break;
-        case(0):
+          case(00):
           coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           moveToBlock(timeStep, blockPosition);
           dealwithblock();
