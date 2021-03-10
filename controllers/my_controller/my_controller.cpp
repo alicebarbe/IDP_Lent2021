@@ -38,10 +38,10 @@ vector<coordinate> scanForBlocks(int timeStep);
 void moveToBlock(int timeStep, coordinate blockPosition);
 void timeDelay(int timeStep, int warmupLength);
 void sendBlockPositions(vector<coordinate> blockPositions);
-void turnToStartBearing(int timeStep, double startBearing);
+void turnToBearing(int timeStep, double startBearing);
 void dealwithblock(void);
 void collectblock(void);
-void movePastBlock(int timeStep);
+void moveForward(int timeStep, double distance);
 
 int robotColour;
 vector<coordinate> targetPoints;
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
   // identify what colour robot 
 
-  if (getLocation(gps)[2] > 0) robotColour = RED_ROBOT; else robotColour = GREEN_ROBOT;
+  if (getLocation(gps).z > 0) robotColour = RED_ROBOT; else robotColour = GREEN_ROBOT;
   sayHello(robotColour, emitter);
   sendRobotLocation(gps, robotColour, emitter);
 
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 10) {
         case(8):
-          turnToStartBearing(timeStep, -30);
+          turnToBearing(timeStep, (robotColour == RED_ROBOT) ? 60 : 240);
           targetPoints = scanForBlocks(timeStep);
           cout << "Blocks found: " << endl;
           sendRobotLocation(gps, robotColour, emitter);
@@ -94,21 +94,6 @@ int main(int argc, char** argv) {
       }
     }
   }
-
-
-  /*
-  vector<coordinate>targetPoints = scanForBlocks(timeStep);
-  // send the blocks one by one to server
-
-  cout << "Blocks found: " << endl;
-  for (int k = 0; k < targetPoints.size(); k++) {
-    cout << "( " << targetPoints[k].x << ", " << targetPoints[k].z << ") " << endl;
-  }
-
-  moveToBlocks(timeStep, targetPoints);
-
-  // - perform simulation steps until Webots is stopping the controller
-  */
   delete robot;
   return 0;
 }
@@ -135,7 +120,6 @@ vector<coordinate> scanForBlocks(int timeStep) {
   double lastBearing = getCompassBearing(getDirection(compass));
   double bearing = lastBearing;
   double wallDistance;
-  const double* robotPos;
   coordinate robotPosition;
 
   bool firstJump = true;
@@ -163,8 +147,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
     i = (i + 1) % measureTimeInterval;
 
     if (i == 0) {
-      robotPos = getLocation(gps);
-      robotPosition = coordinate(robotPos[0], robotPos[2]);
+      robotPosition = getLocation(gps);
       wallDistance = getWallDistance(robotPosition, bearing);
 
       if (abs(distance - lastDistance) > blockDetectThresh) {
@@ -194,62 +177,12 @@ vector<coordinate> scanForBlocks(int timeStep) {
   return blockPositions;
 }
 
-void moveToBlock(int timeStep, coordinate blockPosition) {
-  const double* pos = getLocation(gps);
-  coordinate position(pos[0], pos[2]);
-  coordinate nextTarget = getPositionAroundBlock(blockPosition, position, frontOfRobotDisplacement);
-  updateTargetPosition(nextTarget);
-  while (robot->step(timeStep) != -1) {
-    const double* bearing = getDirection(compass);
-    pos = getLocation(gps);
-
-    position = make_tuple(pos[0], pos[2]);
-    tuple<double, double> motor_speeds = updatePositionalControlLoop(position, bearing);
-    setMotorVelocity(motors, motor_speeds);
-    if (hasFinishedTurning()) {
-      double distance = getDistanceMeasurement(ds1);
-      tweakTargetDistanceFromMeasurement(position, bearing, distance);
-    }
-    if (hasReachedPosition()) {
-      setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
-      cout << "Arrived" << endl;
-      break;
-    }
-  }
-}
-
-void turnToStartBearing(int timeStep, double shiftFromStart) {
-  const double* bearingVector = getDirection(compass);
-  double bearing = constrainBearing(getCompassBearing(bearingVector) + shiftFromStart);
-  updateTargetBearing(bearing);
-
-  while (robot->step(timeStep) != -1) {
-    const double* bearingVector = getDirection(compass);
-    tuple<double, double> motorSpeeds = updateRotationControlLoop(bearingVector);
-    setMotorVelocity(motors, motorSpeeds);
-    if (hasReachedTargetBearing()) {
-      cout << "reached starting position" << endl;
-      break;
-    }
-  }
-}
-
-void timeDelay(int timeStep, int delayLength) {
-  int j = 0;
-  while (robot->step(timeStep) != -1) {
-    j++;
-    if (j == delayLength) {
-      break;
-    }
-  }
-}
-
 void dealwithblock(void) {
     gripBlock(gripperservo);
-    timeDelay(timeStep, 60);
+    timeDelay(timeStep, 15);
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
-    timeDelay(timeStep, 60);
+    timeDelay(timeStep, 15);
     if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
         collectblock();                                                                 //collect block
         sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
@@ -268,27 +201,76 @@ void dealwithblock(void) {
 }
 
 void collectblock(void) {
-  const double* bearing = getDirection(compass);
-  coordinate bearingVector(-bearing[0], bearing[2]);
-  coordinate eatenPosition = coordinate(getLocation(gps)) + bearingVector * eatBlockDistance;
-  updateTargetDistance(eatenPosition);
-  movePastBlock(timeStep);
+  moveForward(timeStep, eatBlockDistance);
   closeTrapDoor(trapdoorservo);
 }
 
-void movePastBlock(int timeStep) {
-    while (robot->step(timeStep) != -1) {
-        cout << "running" << endl;
-        const double* bearing = getDirection(compass);
-        const double* pos = getLocation(gps);
+void moveForward(int timeStep, double distance) {
+  const double* bearing = getDirection(compass);
+  coordinate bearingVector(-bearing[0], bearing[2]); // I dont like using the coordinate as a vector
+  coordinate targetPosition = coordinate(getLocation(gps)) + bearingVector * distance;
+  updateTargetDistance(targetPosition);
 
-        coordinate position = make_tuple(pos[0], pos[2]);
-        tuple<double, double> motor_speeds = updatePositionalControlLoop(position, bearing);
-        setMotorVelocity(motors, motor_speeds);
-        if (hasReachedPosition()) {
-            setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
-            cout << "Arrived" << endl;
-            break;
-        }
+  while (robot->step(timeStep) != -1) {
+    bearing = getDirection(compass);
+    coordinate robotPos = getLocation(gps);
+
+    tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
+    setMotorVelocity(motors, motor_speeds);
+
+    if (hasReachedPosition()) {
+      setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+      cout << "Arrived" << endl;
+      break;
     }
+  }
+}
+
+void moveToBlock(int timeStep, coordinate blockPosition) {
+  coordinate robotPos = getLocation(gps);
+  coordinate nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
+  updateTargetPosition(nextTarget);
+
+  while (robot->step(timeStep) != -1) {
+    const double* bearing = getDirection(compass);
+    coordinate robotPos = getLocation(gps);
+
+    tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
+    setMotorVelocity(motors, motor_speeds);
+
+    if (hasFinishedTurning()) {
+      double distance = getDistanceMeasurement(ds1);
+      tweakTargetDistanceFromMeasurement(robotPos, bearing, distance);
+    }
+    if (hasReachedPosition()) {
+      setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+      break;
+    }
+  }
+}
+
+void turnToBearing(int timeStep, double bearing) {
+  updateTargetBearing(bearing);
+
+  while (robot->step(timeStep) != -1) {
+    const double* bearingVector = getDirection(compass);
+
+    tuple<double, double> motorSpeeds = updateRotationControlLoop(bearingVector);
+    setMotorVelocity(motors, motorSpeeds);
+
+    if (hasReachedTargetBearing()) {
+      cout << "reached starting position" << endl;
+      break;
+    }
+  }
+}
+
+void timeDelay(int timeStep, int delayLength) {
+  int j = 0;
+  while (robot->step(timeStep) != -1) {
+    j++;
+    if (j == delayLength) {
+      break;
+    }
+  }
 }

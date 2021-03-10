@@ -14,8 +14,8 @@ GPS* initGPS(Robot* robot, const char* name) {							//initialises GPS module fo
 	return gps;															//returns gps,  a pointer to GPS
 }
 
-const double* getLocation(GPS* gps) {
-	return gps->getValues();
+coordinate getLocation(GPS* gps) {
+	return coordinate(gps->getValues());
 }
 
 Compass* initCompass(Robot* robot, const char* name) {
@@ -61,8 +61,8 @@ void sayHello(int robotIdentifier, Emitter* emitter) {
 
 
 void sendRobotLocation(GPS* gps, int robotIdentifier, Emitter* emitter) {
-	const double* robotPos = getLocation(gps);
-	const message locationMessage(robotIdentifier * 10 + 2, robotPos[0], robotPos[2]);
+	coordinate robotPos = getLocation(gps);
+	const message locationMessage(robotIdentifier * 10 + 2, robotPos.x, robotPos.z);
 	emitData(emitter,(const void*) &locationMessage, 20);
 }
 

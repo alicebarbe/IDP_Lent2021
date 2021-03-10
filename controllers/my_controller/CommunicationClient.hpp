@@ -12,7 +12,7 @@ typedef std::tuple<int, double, double> message;
 //char* received_data;
 
 webots::GPS* initGPS(webots::Robot* robot, const char* name);
-const double* getLocation(webots::GPS* gps);
+coordinate getLocation(webots::GPS* gps);
 webots::Compass* initCompass(webots::Robot* robot, const char* name);
 const double* getDirection(webots::Compass* compass);
 webots::Emitter* initEmitter(webots::Robot* robot, const char* name);

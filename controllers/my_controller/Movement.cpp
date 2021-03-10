@@ -105,7 +105,6 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
 
   double distance_to_target = displacement.x * -currentBearingVector[0]
     + displacement.z * currentBearingVector[2];  // dot product taking into account the compass orientation
-  cout << "distance: " << distance_to_target << endl;
 
   if (turningStage) {
     double target_bearing = getBearing(displacement);
