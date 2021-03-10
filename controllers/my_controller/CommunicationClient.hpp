@@ -23,3 +23,5 @@ void sayHello(int robotIdentifier, webots::Emitter* emitter);
 void sendRobotLocation(webots::GPS* gps, int robotIdentifier, webots::Emitter* emitter);
 void sendBlockLocation(coordinate blockPos, int robotIdentifier, webots::Emitter* emitter);
 void sendFinishedScan(int robotIdentifier, webots::Emitter* emitter);
+void sendBlockColour(int robotIdentifier, webots:: Emitter* emitter, int colour);
+void sendDealtwithBlock(int robotIdentifier, webots::Emitter* emitter);

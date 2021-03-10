@@ -13,12 +13,12 @@ Motor* initServo(Robot* robot, const char* name) {
 }
 
 void openGripper(Motor* gripper) {
-	gripper->setPosition(1.5707);
+	gripper->setPosition(0);
 	return;
 }
 
 void closeGripper(Motor* gripper) {
-	gripper->setPosition(-2.5);
+	gripper->setPosition(-3.1415925);
 }
 
 void openTrapDoor(Motor* trapdoor) {
@@ -27,4 +27,8 @@ void openTrapDoor(Motor* trapdoor) {
 
 void closeTrapDoor(Motor* trapdoor) {
 	trapdoor->setPosition(0);
+}
+
+void gripBlock(Motor* gripper) {
+	gripper->setPosition(-2.5);
 }

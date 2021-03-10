@@ -29,3 +29,5 @@ double getPIDOutput(double error, PIDGains gains, PIDState state);
 coordinate getPositionInfrontOfBlock(coordinate blockPosition, coordinate robotPosition);
 coordinate getBlockPosition(std::tuple<double, double> afterLastJump, std::tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
   coordinate robotPosition, const double sensorBeamAngle);
+coordinate getTargetPosition();
+coordinate getPositionBeyondBlock(coordinate targetPosition, const double* bearingvector, double distance);

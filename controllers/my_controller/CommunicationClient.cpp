@@ -75,3 +75,13 @@ void sendFinishedScan(int robotIdentifier, Emitter* emitter) {
 	const message locationMessage(robotIdentifier * 10 + 6, 0, 0);
 	emitData(emitter, (const void*)&locationMessage, 20);
 }
+
+void sendBlockColour(int robotIdentifier, Emitter* emitter, int colour) {
+	const message blockColourMessage(robotIdentifier * 10 + (colour+2), 0, 0);
+	emitData(emitter, (const void*)&blockColourMessage, 20);
+}
+
+void sendDealtwithBlock(int robotIdentifier, Emitter* emitter) {
+	const message DealtwithBlockMessage(robotIdentifier * 10 + 7, 0, 0);
+	emitData(emitter, (const void*)&DealtwithBlockMessage, 20);
+}

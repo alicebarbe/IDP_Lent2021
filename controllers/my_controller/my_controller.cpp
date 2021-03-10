@@ -39,6 +39,9 @@ void moveToBlock(int timeStep, coordinate blockPosition);
 void sensorHeatUp(int timeStep, int warmupLength);
 void sendBlockPositions(vector<coordinate> blockPositions);
 void turnToStartBearing(int timeStep, double startBearing);
+void dealwithblock(void);
+void collectblock(void);
+void movePastBlock(int timeStep);
 
 int robotColour;
 vector<coordinate> targetPoints;
@@ -55,9 +58,11 @@ tuple<LightSensor*, LightSensor*> colourSensor = initLightSensor(robot, "light_s
 Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
+int timeStep = (int)robot->getBasicTimeStep();
+
 int main(int argc, char** argv) {
   // get the time step of the current world.
-  int timeStep = (int)robot->getBasicTimeStep();
+  
   sensorHeatUp(timeStep, 5);
 
   // identify what colour robot 
@@ -83,13 +88,7 @@ int main(int argc, char** argv) {
         case(0):
           coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           moveToBlock(timeStep, blockPosition);
-          closeGripper(gripperservo);
-          sensorHeatUp(timeStep, 15);
-          openGripper(gripperservo);
-          openTrapDoor(trapdoorservo);
-          sensorHeatUp(timeStep, 15);
-          if(checkColour(colourSensor) == 1) cout << "green block" << endl;
-          if(checkColour(colourSensor) == 2) cout << "red block" << endl;          
+          dealwithblock();
           break;
         }
       }
@@ -243,4 +242,53 @@ void sensorHeatUp(int timeStep, int warmupLength) {
       break;
     }
   }
+}
+
+void dealwithblock(void) {
+    gripBlock(gripperservo);
+    sensorHeatUp(timeStep, 15);
+    openGripper(gripperservo);
+    openTrapDoor(trapdoorservo);
+    sensorHeatUp(timeStep, 15);
+    if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
+        collectblock();                                                                 //collect block
+        sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
+        sendRobotLocation(gps, robotColour, emitter);
+        sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done dealing with this block
+    }   
+    else if (abs(checkColour(colourSensor) - robotColour) == 1) {                       //if block is other colour
+        closeTrapDoor(trapdoorservo);
+        sensorHeatUp(timeStep, 15);
+        sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
+        sendRobotLocation(gps, robotColour, emitter);
+        sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
+    }
+   
+
+}
+
+void collectblock(void) {
+    updateTargetPosition(getPositionBeyondBlock(getTargetPosition(), getDirection(compass), 0.2));
+    openGripper(gripperservo);
+    movePastBlock(timeStep);
+    closeTrapDoor(trapdoorservo);
+
+}
+
+void movePastBlock(int timeStep) {
+    const double* pos = getLocation(gps);
+    coordinate position(pos[0], pos[2]);
+    while (robot->step(timeStep) != -1) {
+        const double* bearing = getDirection(compass);
+        pos = getLocation(gps);
+
+        position = make_tuple(pos[0], pos[2]);
+        tuple<double, double> motor_speeds = moveToPosition(position, bearing);
+        setMotorVelocity(motors, motor_speeds);
+        if (hasReachedPosition()) {
+            setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+            cout << "Arrived" << endl;
+            break;
+        }
+    }
 }

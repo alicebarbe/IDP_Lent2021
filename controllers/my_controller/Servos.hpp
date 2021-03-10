@@ -8,3 +8,4 @@ void openGripper(webots::Motor* gripper);
 void closeGripper(webots::Motor* gripper);
 void openTrapDoor(webots::Motor* trapdoor);
 void closeTrapDoor(webots::Motor* trapdoor);
+void gripBlock(webots::Motor* gripper);

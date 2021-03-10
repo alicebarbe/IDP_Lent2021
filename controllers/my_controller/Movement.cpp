@@ -172,3 +172,11 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
   double block_z = robotPosition.z + rotatedSensorDisp.z + blockAvgDistance * sin(blockAvgAngle * DEG_TO_RAD);
   return coordinate(block_x, block_z);
 }
+
+coordinate getTargetPosition() {
+    return targetPosition;
+}
+
+coordinate getPositionBeyondBlock(coordinate targetPosition, const double* bearingvector, double distance) {
+    return coordinate(targetPosition.x + distance * (-bearingvector[0]), targetPosition.z + distance * (bearingvector[2]));
+}
