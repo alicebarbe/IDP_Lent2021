@@ -30,6 +30,7 @@ coordinate targetPosition;
 bool turningStage = false;
 bool forwardStage = false;
 bool reachedPosition = false;
+bool useDistanceSensor = true;
 bool canReverse = false;
 
 double targetBearing; 
@@ -45,6 +46,7 @@ void updateTargetPosition(coordinate newTarget, bool reverse) {
   turningStage = true;
   forwardStage = false;
   reachedPosition = false;
+  useDistanceSensor = true;
   canReverse = reverse;
 
   ForwardPIDState = PIDState{ 0, 0 };
@@ -56,6 +58,7 @@ void updateTargetDistance(coordinate newTarget, bool reverse) {
   turningStage = false; // disable rotation, so only move forwards
   forwardStage = true;
   reachedPosition = false;
+  useDistanceSensor = true;
   canReverse = reverse;
 
   ForwardPIDState = PIDState{ 0, 0 };
@@ -63,24 +66,27 @@ void updateTargetDistance(coordinate newTarget, bool reverse) {
 }
 
 void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance) {
+  if (distance < ULTRASOUND_MIN_DISTANCE) {
+    useDistanceSensor = false;
+  }
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
   double expectedDist = displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
-  if (expectedDist > ULTRASOUND_MIN_DISTANCE) {
-    targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
-    targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
-  }
+  cout << "ultrasound : " << distance << " expected :" << expectedDist << endl;
+
+  targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
+  targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
 }
 
 bool hasReachedPosition() {
   return reachedPosition;
 }
 
-bool hasFinishedTurning() {
-  return !turningStage;
+bool canUseDistanceSensor() {
+  return !turningStage && useDistanceSensor;
 }
 
 bool hasReachedTargetBearing() {

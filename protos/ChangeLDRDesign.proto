@@ -280,7 +280,7 @@ Robot {
                 }
               }
               DistanceSensor {
-                translation 0.0025 -0.029917 -0.02473
+                translation 0.0025 -0.029917 -0.03473
                 lookupTable[ 0 0 0, 2.4 2.4 0]
                 rotation  0.9995 0 -0.02 -1.570796
                 children [

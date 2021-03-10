@@ -24,7 +24,7 @@ void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
 
 // flag retrieval functions used to monitor control behavior
 bool hasReachedPosition();
-bool hasFinishedTurning();
+bool canUseDistanceSensor();
 bool hasReachedTargetBearing();
 coordinate getTargetPosition();
 

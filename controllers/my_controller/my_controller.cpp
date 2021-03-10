@@ -80,7 +80,6 @@ int main(int argc, char** argv) {
         case(8):
           turnToBearing(timeStep, (robotColour == RED_ROBOT) ? 60 : 240);
           targetPoints = scanForBlocks(timeStep);
-          cout << "Blocks found: " << endl;
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
@@ -196,8 +195,6 @@ void dealwithblock(void) {
         sendRobotLocation(gps, robotColour, emitter);
         sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
     }
-   
-
 }
 
 void collectblock(void) {
@@ -238,7 +235,7 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
     tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
     setMotorVelocity(motors, motor_speeds);
 
-    if (hasFinishedTurning()) {
+    if (canUseDistanceSensor()) {
       double distance = getDistanceMeasurement(ds1);
       tweakTargetDistanceFromMeasurement(robotPos, bearing, distance);
     }
