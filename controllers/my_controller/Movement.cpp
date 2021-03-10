@@ -75,8 +75,6 @@ void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   double expectedDist = displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
-  cout << "ultrasound : " << distance << " expected :" << expectedDist << endl;
-
   targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
   targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
 }

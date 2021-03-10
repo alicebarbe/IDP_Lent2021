@@ -178,7 +178,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
 
 void dealwithblock(void) {
     gripBlock(gripperservo);
-    timeDelay(timeStep, 15);
+    timeDelay(timeStep, 20);
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
     timeDelay(timeStep, 15);
