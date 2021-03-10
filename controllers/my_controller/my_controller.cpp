@@ -203,6 +203,8 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
       tweakBlockDistanceFromMeasurement(position, bearing, distance);
     }
     if (hasReachedPosition()) {
+      setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+      cout << "Arrived" << endl;
       break;
     }
   }
