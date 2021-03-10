@@ -38,6 +38,7 @@ vector<coordinate> scanForBlocks(int timeStep);
 void moveToBlock(int timeStep, coordinate blockPosition);
 void sensorHeatUp(int timeStep, int warmupLength);
 void sendBlockPositions(vector<coordinate> blockPositions);
+void turnToStartBearing(int timeStep, double startBearing);
 
 int robotColour;
 vector<coordinate> targetPoints;
@@ -77,7 +78,6 @@ int main(int argc, char** argv) {
           sendFinishedScan(robotColour, emitter);
           break;
         case(0):
-          cout << "Im starting to move" << endl;
           coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           moveToBlock(timeStep, blockPosition);
           break;
@@ -144,7 +144,6 @@ vector<coordinate> scanForBlocks(int timeStep) {
     lastBearing = bearing;
     distance = getDistanceMeasurement(ds1);
     bearing = getCompassBearing(getDirection(compass));
-    cout << bearing << endl;
 
     if (lastBearing < endBearing && bearing >= endBearing) {
       setMotorVelocity(motors, tuple<double, double>(0, 0));
@@ -176,6 +175,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
         }
 
         if (get<0>(beforeJump) < wallDistance - blockDetectThresh) {
+          cout << "adding a block" << endl;
           blockPositions.push_back(getBlockPosition(afterLastJump, beforeJump, lastJumpWasFall, jumpWasFall, robotPosition, ULTRASOUND_BEAM_ANGLE));
         }
       }
@@ -190,7 +190,6 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
   coordinate position(pos[0], pos[2]);
   coordinate nextTarget = getPositionInfrontOfBlock(blockPosition, position);
   updateTargetPosition(nextTarget);
-
   while (robot->step(timeStep) != -1) {
     const double* bearing = getDirection(compass);
     pos = getLocation(gps);
@@ -207,6 +206,12 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
       cout << "Arrived" << endl;
       break;
     }
+  }
+}
+
+void turnToStartBearing(int timeStep, double startBearing) {
+  while (robot->step(timeStep) != -1) {
+    break;
   }
 }
 

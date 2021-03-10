@@ -31,6 +31,14 @@ bool turningStage = false;
 bool forwardStage = false;
 bool reachedPosition = false;
 
+double targetBearing; 
+bool reachedBearing = false;
+
+void updateTargetBearing(double newBearing) {
+  targetBearing = newBearing;
+  reachedBearing = false;
+}
+
 void updateTargetPosition(coordinate newTarget) {
   targetPosition = newTarget;
   turningStage = true;
@@ -60,6 +68,19 @@ bool hasReachedPosition() {
 
 bool hasFinishedTurning() {
   return !turningStage;
+}
+
+bool hasReachedTargetBearing() {
+  return reachedBearing;
+}
+
+tuple<double, double> turnToTargetBearing(const double* currentBearingVector) {
+  double current_bearing = getCompassBearing(currentBearingVector);
+  double turning_speed = turnToBearing(targetBearing, current_bearing);
+  if (turning_speed == 0) {
+    reachedBearing = true;
+  }
+  return tuple<double, double>(turning_speed, -turning_speed);
 }
 
 tuple<double, double> moveToPosition(coordinate currentPosition, const double* currentBearingVector) {
@@ -128,15 +149,18 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
 
   if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle) {
     // block is not being obscured by anything else
+    cout << "no obstruction" << endl;
     blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
     blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
   }
   else if (lastJumpWasFall && jumpWasFall) {
+    cout << "obstruction to right" << endl;
     // block partially obscured by something infront of it at the new jump side
     blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
     blockAvgAngle = get<1>(afterLastJump) + (sensorBeamAngle + BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) / 2;
   }
   else if (!lastJumpWasFall && !jumpWasFall) {
+    cout << "obstruction to left" << endl;
     blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
     blockAvgAngle = get<1>(beforeJump) - (sensorBeamAngle + BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) / 2;
   }
