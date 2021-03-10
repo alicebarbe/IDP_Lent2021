@@ -46,6 +46,7 @@ vector<coordinate> targetPoints;
 Robot *robot = new Robot();
 tuple<Motor*, Motor*> motors = initMotors(robot, "wheel1", "wheel2");
 Motor* gripperservo = initServo(robot, "gripper motor");
+Motor* trapdoorservo = initServo(robot, "trap_door");
 DistanceSensor* ds1 = initDistanceSensor(robot, "ds");
 GPS* gps = initGPS(robot, "gps");
 Compass* compass = initCompass(robot, "compass");
@@ -72,6 +73,7 @@ int main(int argc, char** argv) {
         switch (get<0>(*receivedData) % 10) {
         case(8):
           targetPoints = scanForBlocks(timeStep);
+          cout << "Blocks found: " << endl;
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
@@ -80,6 +82,13 @@ int main(int argc, char** argv) {
           cout << "Im starting to move" << endl;
           coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           moveToBlock(timeStep, blockPosition);
+          closeGripper(gripperservo);
+          sensorHeatUp(timeStep, 15);
+          openGripper(gripperservo);
+          openTrapDoor(trapdoorservo);
+          sensorHeatUp(timeStep, 15);
+          if(checkColour(colourSensor) == 1) cout << "green block" << endl;
+          if(checkColour(colourSensor) == 2) cout << "red block" << endl;          
           break;
         }
       }

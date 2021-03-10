@@ -11,3 +11,4 @@ std::tuple<webots::LightSensor*, webots::LightSensor*> initLightSensor(webots::R
 
 double getDistanceMeasurement(webots:: DistanceSensor* ds);
 std::tuple<bool, bool> getLightMeasurement(std::tuple<webots::LightSensor*, webots::LightSensor*> sensors);
+char checkColour(std::tuple<webots::LightSensor*, webots::LightSensor*> colourSensor);

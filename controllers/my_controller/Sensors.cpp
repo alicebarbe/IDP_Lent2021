@@ -70,7 +70,15 @@ tuple<bool, bool> getLightMeasurement(tuple<LightSensor*, LightSensor*> sensors)
   return tuple<bool, bool>(get<0>(sensors)->getValue() > COMPARATOR_REF_RED, get<1>(sensors)->getValue() > COMPARATOR_REF_GREEN);
 }
 
-
+char checkColour(tuple<LightSensor*, LightSensor*> colourSensor)
+{
+	if (get<0>(getLightMeasurement(colourSensor))) {
+		return 2;			//RED
+	}
+	if (get<1>(getLightMeasurement(colourSensor))) {
+		return 1;			//GREEN
+	}
+}
 
 
 

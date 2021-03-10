@@ -222,12 +222,12 @@ Robot {
             rotation 0 -1 0 0
             children [
               DEF LDR Solid {
-                translation 0.00435 -0.0299 0.00679
-                lookupTable [0 0 0, 3 1023 0]
-                colorFilter 1 0 0
+                 translation 0.00435 -0.0299 0.00679
                 children [
                   LightSensor {
-                    translation 0.0024 0.005 0.02375
+                  lookupTable [0 0 0, 1 1000 0]
+                  colorFilter 1 0 0
+                    translation 0.0024 0.002 0.02375
                     children [
                       Shape {
                         appearance PBRAppearance {
@@ -239,15 +239,15 @@ Robot {
                         }
                       }
                     ]
-                name "light_sensor_red"
-                recognitionColors [
+                  name "light_sensor_red"
+                  recognitionColors [
                   0 0 0
                   ]
                   }
                    LightSensor {
-                    translation 0.0024 -0.005 0.02375
-                    lookupTable [0 0 0, 3 1023 0]
-                    colorFilter 0 1 0
+                    translation 0.0024 -0.002 0.02375
+                    lookupTable [0 0 0, 1 1000 0]
+                    colorFilter 0 1 0 
                     children [
                       Shape {
                         appearance PBRAppearance {
