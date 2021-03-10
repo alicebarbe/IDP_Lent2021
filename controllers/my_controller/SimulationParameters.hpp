@@ -33,4 +33,5 @@ inline const int COMPARATOR_REF_GREEN = 500;  // 10 bit value
 
 inline const coordinate frontOfRobotDisplacement(0.082, 0.01);
 inline const coordinate distanceSensorDisplacement(0.082, 0.0);
+inline const double eatBlockDistance = 0.12;
 

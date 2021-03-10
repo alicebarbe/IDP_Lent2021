@@ -8,6 +8,7 @@
 #include "Utility.hpp"
 #include "Coordinate.hpp"
 #include "SimulationParameters.hpp"
+#include "Movement.hpp"
 
 using namespace std;
 
@@ -43,7 +44,10 @@ double getBearingDifference(double bearingOne, double bearingTwo) {
 }
 
 double constrainBearing(double bearing) {
-  return bearing > 360 ? constrainBearing(bearing - 360) : bearing;
+  if (bearing >= 0 && bearing < 360) {
+    return bearing;
+  }
+  else return bearing - 360 * floor(bearing / 360.0);
 }
 
 coordinate rotateVector(const coordinate vector, double angle) {
@@ -53,16 +57,13 @@ coordinate rotateVector(const coordinate vector, double angle) {
   return coordinate(rotatedX, rotatedZ);
 }
 
-double getWallDistance(const coordinate robotPos, double angle) {
-  double boundXPos, boundXNeg, boundZPos, boundZNeg;
-  double radAngle = angle * DEG_TO_RAD;
-  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, angle);
-
-  boundXPos = (ARENA_X_MAX - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
-  boundXNeg = (ARENA_X_MIN - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
-
-  boundZPos = (ARENA_Z_MAX - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
-  boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
-
-  return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+double getPIDOutput(double error, PIDGains gains, PIDState state) {
+  double diff = 0;
+  if (gains.kd != 0) {
+    diff = (state.lastError - error) * gains.kd;  // assumes a constant timestep
+  }
+  if (gains.ki != 0) {
+    state.integral += (abs(error) < gains.integralThresh) ? gains.ki * error : 0;
+  }
+  return (abs(error) > gains.moveThresh) ? error * gains.kp + state.integral + diff : 0;
 }

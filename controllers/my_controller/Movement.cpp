@@ -14,7 +14,7 @@
 using namespace std;
 using namespace webots;
 
-const PIDGains RotationalPIDGains{ 0.1, 0, 0, 0.1, 10};
+const PIDGains RotationalPIDGains{ 5, 0, 0.01, 0.1, 10};
 const double endTurnThresh = 0.1;  // raise reached rotation flag when less than 0.1 degrees from the target rotation
 const double turnOnlyThresh = 2;  // if more than this many degrees from the correct heading dont move forwards
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
@@ -23,13 +23,14 @@ const double distanceMeasurementWeight = 0.5;  // how much weight to give new di
 
 PIDState RotationalPIDState{ 0, 0 };
 
-const PIDGains ForwardPIDGains{ 1000, 0, 0, 0, 0.01};
+const PIDGains ForwardPIDGains{ 1000, 0.1, 0, 0, 0.01};
 PIDState ForwardPIDState{ 0, 0 };
 
 coordinate targetPosition;
 bool turningStage = false;
 bool forwardStage = false;
 bool reachedPosition = false;
+bool canReverse = false;
 
 double targetBearing; 
 bool reachedBearing = false;
@@ -39,17 +40,29 @@ void updateTargetBearing(double newBearing) {
   reachedBearing = false;
 }
 
-void updateTargetPosition(coordinate newTarget) {
+void updateTargetPosition(coordinate newTarget, bool reverse) {
   targetPosition = newTarget;
   turningStage = true;
   forwardStage = false;
   reachedPosition = false;
+  canReverse = reverse;
 
   ForwardPIDState = PIDState{ 0, 0 };
   RotationalPIDState = PIDState{ 0, 0 };
 }
 
-void tweakBlockDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance) {
+void updateTargetDistance(coordinate newTarget, bool reverse) {
+  targetPosition = newTarget;
+  turningStage = false; // disable rotation, so only move forwards
+  forwardStage = true;
+  reachedPosition = false;
+  canReverse = reverse;
+
+  ForwardPIDState = PIDState{ 0, 0 };
+  RotationalPIDState = PIDState{ 0, 0 };
+}
+
+void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance) {
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
@@ -74,39 +87,41 @@ bool hasReachedTargetBearing() {
   return reachedBearing;
 }
 
-tuple<double, double> turnToTargetBearing(const double* currentBearingVector) {
+tuple<double, double> updateRotationControlLoop(const double* currentBearingVector) {
   double current_bearing = getCompassBearing(currentBearingVector);
-  double turning_speed = turnToBearing(targetBearing, current_bearing);
+  double turning_speed = getBearingCorrection(targetBearing, current_bearing);
   if (turning_speed == 0) {
     reachedBearing = true;
   }
   return tuple<double, double>(turning_speed, -turning_speed);
 }
 
-tuple<double, double> moveToPosition(coordinate currentPosition, const double* currentBearingVector) {
+tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, const double* currentBearingVector) {
 
   coordinate displacement = targetPosition - currentPosition;
-  double target_bearing = getBearing(displacement);
-  double current_bearing = getCompassBearing(currentBearingVector);
 
   double turning_speed = 0.0;
   double forward_speed = 0.0;
 
   double distance_to_target = displacement.x * -currentBearingVector[0]
     + displacement.z * currentBearingVector[2];  // dot product taking into account the compass orientation
+  cout << "distance: " << distance_to_target << endl;
 
   if (turningStage) {
-    turning_speed = turnToBearing(target_bearing, current_bearing);
+    double target_bearing = getBearing(displacement);
+    double current_bearing = getCompassBearing(currentBearingVector);
+
+    turning_speed = getBearingCorrection(target_bearing, current_bearing);
     if (abs(getBearingDifference(current_bearing, target_bearing)) < turnOnlyThresh) {
       forwardStage = true;
     }
   }
   if (forwardStage) {
     forward_speed = clamp(getPIDOutput(distance_to_target, ForwardPIDGains, ForwardPIDState), -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
-    if (abs(distance_to_target) < noTurnThresh) {
+    if (turningStage && abs(distance_to_target) < noTurnThresh) {
       turningStage = false;
     }
-    if (abs(distance_to_target) < endMoveThresh) {
+    if (forwardStage && abs(distance_to_target) < endMoveThresh) {
       forwardStage = false;
       reachedPosition = true;
     }
@@ -117,29 +132,18 @@ tuple<double, double> moveToPosition(coordinate currentPosition, const double* c
   return tuple<double, double>(left_motor_speed, right_motor_speed);
 }
 
-double turnToBearing(double bearing, double currentBearing) {
+double getBearingCorrection(double bearing, double currentBearing) {
   double error = getBearingDifference(currentBearing, bearing);
   double turn_speed = clamp(getPIDOutput(error, RotationalPIDGains, RotationalPIDState), - MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
   return turn_speed;
 }
 
-double getPIDOutput(double error, PIDGains gains, PIDState state) {
-  double diff = 0;
-  if (gains.kd != 0) {
-    diff = (state.lastError - error) * gains.kd;  // assumes a constant timestep
-  }
-  if (gains.ki != 0) {
-    state.integral += (abs(error) < gains.integralThresh) ? gains.ki * error : 0;
-  }
-  return (abs(error) > gains.moveThresh) ? error * gains.kp + state.integral + diff : 0;
-}
-
-coordinate getPositionInfrontOfBlock(coordinate blockPosition, coordinate robotPosition) {
+coordinate getPositionAroundBlock(coordinate blockPosition, coordinate robotPosition, coordinate offset) {
   coordinate displacement = blockPosition - robotPosition;
   double target_bearing = getBearing(displacement);
 
-  coordinate rotatedGrabberDisp = rotateVector(frontOfRobotDisplacement, target_bearing);
-  return blockPosition - rotatedGrabberDisp;
+  coordinate rotatedOffset = rotateVector(offset, target_bearing);
+  return blockPosition - rotatedOffset;
 }
 
 coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
@@ -149,16 +153,13 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
 
   if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle + 0.8 * BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) {
     // block is not being obscured by anything else
-    cout << "no obstruction" << endl;
     blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
   }
   else if (lastJumpWasFall && jumpWasFall) {
-    cout << "obstruction to right" << endl;
     // block partially obscured by something infront of it at the new jump side
     blockAvgAngle = get<1>(afterLastJump) + (sensorBeamAngle + BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) / 2;
   }
   else if (!lastJumpWasFall && !jumpWasFall) {
-    cout << "obstruction to left" << endl;
     blockAvgAngle = get<1>(beforeJump) - (sensorBeamAngle + BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) / 2;
   }
   else {
@@ -173,10 +174,20 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
   return coordinate(block_x, block_z);
 }
 
-coordinate getTargetPosition() {
-    return targetPosition;
+double getWallDistance(const coordinate robotPos, double angle) {
+  double boundXPos, boundXNeg, boundZPos, boundZNeg;
+  double radAngle = angle * DEG_TO_RAD;
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, angle);
+
+  boundXPos = (ARENA_X_MAX - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
+  boundXNeg = (ARENA_X_MIN - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
+
+  boundZPos = (ARENA_Z_MAX - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
+  boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
+
+  return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
 }
 
-coordinate getPositionBeyondBlock(coordinate targetPosition, const double* bearingvector, double distance) {
-    return coordinate(targetPosition.x + distance * (-bearingvector[0]), targetPosition.z + distance * (bearingvector[2]));
+coordinate getTargetPosition() {
+  return targetPosition;
 }

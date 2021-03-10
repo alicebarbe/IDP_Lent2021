@@ -36,7 +36,7 @@ using namespace std;
 
 vector<coordinate> scanForBlocks(int timeStep);
 void moveToBlock(int timeStep, coordinate blockPosition);
-void sensorHeatUp(int timeStep, int warmupLength);
+void timeDelay(int timeStep, int warmupLength);
 void sendBlockPositions(vector<coordinate> blockPositions);
 void turnToStartBearing(int timeStep, double startBearing);
 void dealwithblock(void);
@@ -63,7 +63,7 @@ int timeStep = (int)robot->getBasicTimeStep();
 int main(int argc, char** argv) {
   // get the time step of the current world.
   
-  sensorHeatUp(timeStep, 5);
+  timeDelay(timeStep, 5);
 
   // identify what colour robot 
 
@@ -197,18 +197,18 @@ vector<coordinate> scanForBlocks(int timeStep) {
 void moveToBlock(int timeStep, coordinate blockPosition) {
   const double* pos = getLocation(gps);
   coordinate position(pos[0], pos[2]);
-  coordinate nextTarget = getPositionInfrontOfBlock(blockPosition, position);
+  coordinate nextTarget = getPositionAroundBlock(blockPosition, position, frontOfRobotDisplacement);
   updateTargetPosition(nextTarget);
   while (robot->step(timeStep) != -1) {
     const double* bearing = getDirection(compass);
     pos = getLocation(gps);
 
     position = make_tuple(pos[0], pos[2]);
-    tuple<double, double> motor_speeds = moveToPosition(position, bearing);
+    tuple<double, double> motor_speeds = updatePositionalControlLoop(position, bearing);
     setMotorVelocity(motors, motor_speeds);
     if (hasFinishedTurning()) {
       double distance = getDistanceMeasurement(ds1);
-      tweakBlockDistanceFromMeasurement(position, bearing, distance);
+      tweakTargetDistanceFromMeasurement(position, bearing, distance);
     }
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
@@ -225,7 +225,7 @@ void turnToStartBearing(int timeStep, double shiftFromStart) {
 
   while (robot->step(timeStep) != -1) {
     const double* bearingVector = getDirection(compass);
-    tuple<double, double> motorSpeeds = turnToTargetBearing(bearingVector);
+    tuple<double, double> motorSpeeds = updateRotationControlLoop(bearingVector);
     setMotorVelocity(motors, motorSpeeds);
     if (hasReachedTargetBearing()) {
       cout << "reached starting position" << endl;
@@ -234,11 +234,11 @@ void turnToStartBearing(int timeStep, double shiftFromStart) {
   }
 }
 
-void sensorHeatUp(int timeStep, int warmupLength) {
+void timeDelay(int timeStep, int delayLength) {
   int j = 0;
   while (robot->step(timeStep) != -1) {
     j++;
-    if (j == warmupLength) {
+    if (j == delayLength) {
       break;
     }
   }
@@ -246,10 +246,10 @@ void sensorHeatUp(int timeStep, int warmupLength) {
 
 void dealwithblock(void) {
     gripBlock(gripperservo);
-    sensorHeatUp(timeStep, 15);
+    timeDelay(timeStep, 60);
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
-    sensorHeatUp(timeStep, 15);
+    timeDelay(timeStep, 60);
     if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
         collectblock();                                                                 //collect block
         sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
@@ -258,7 +258,7 @@ void dealwithblock(void) {
     }   
     else if (abs(checkColour(colourSensor) - robotColour) == 1) {                       //if block is other colour
         closeTrapDoor(trapdoorservo);
-        sensorHeatUp(timeStep, 15);
+        timeDelay(timeStep, 15);
         sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
         sendRobotLocation(gps, robotColour, emitter);
         sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
@@ -268,22 +268,22 @@ void dealwithblock(void) {
 }
 
 void collectblock(void) {
-    updateTargetPosition(getPositionBeyondBlock(getTargetPosition(), getDirection(compass), 0.2));
-    openGripper(gripperservo);
-    movePastBlock(timeStep);
-    closeTrapDoor(trapdoorservo);
-
+  const double* bearing = getDirection(compass);
+  coordinate bearingVector(-bearing[0], bearing[2]);
+  coordinate eatenPosition = coordinate(getLocation(gps)) + bearingVector * eatBlockDistance;
+  updateTargetDistance(eatenPosition);
+  movePastBlock(timeStep);
+  closeTrapDoor(trapdoorservo);
 }
 
 void movePastBlock(int timeStep) {
-    const double* pos = getLocation(gps);
-    coordinate position(pos[0], pos[2]);
     while (robot->step(timeStep) != -1) {
+        cout << "running" << endl;
         const double* bearing = getDirection(compass);
-        pos = getLocation(gps);
+        const double* pos = getLocation(gps);
 
-        position = make_tuple(pos[0], pos[2]);
-        tuple<double, double> motor_speeds = moveToPosition(position, bearing);
+        coordinate position = make_tuple(pos[0], pos[2]);
+        tuple<double, double> motor_speeds = updatePositionalControlLoop(position, bearing);
         setMotorVelocity(motors, motor_speeds);
         if (hasReachedPosition()) {
             setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
