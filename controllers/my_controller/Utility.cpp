@@ -42,6 +42,10 @@ double getBearingDifference(double bearingOne, double bearingTwo) {
   return diff;
 }
 
+double constrainBearing(double bearing) {
+  return bearing > 360 ? constrainBearing(bearing - 360) : bearing;
+}
+
 coordinate rotateVector(const coordinate vector, double angle) {
   double radAngle = angle * DEG_TO_RAD;
   double rotatedX = vector.x * cos(radAngle) - vector.z * sin(radAngle);

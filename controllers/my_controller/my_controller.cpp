@@ -38,6 +38,7 @@ vector<coordinate> scanForBlocks(int timeStep);
 void moveToBlock(int timeStep, coordinate blockPosition);
 void sensorHeatUp(int timeStep, int warmupLength);
 void sendBlockPositions(vector<coordinate> blockPositions);
+void turnToStartBearing(int timeStep, double startBearing);
 
 int robotColour;
 vector<coordinate> targetPoints;
@@ -72,6 +73,7 @@ int main(int argc, char** argv) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 10) {
         case(8):
+          turnToStartBearing(timeStep, -30);
           targetPoints = scanForBlocks(timeStep);
           cout << "Blocks found: " << endl;
           sendRobotLocation(gps, robotColour, emitter);
@@ -79,7 +81,6 @@ int main(int argc, char** argv) {
           sendFinishedScan(robotColour, emitter);
           break;
         case(0):
-          cout << "Im starting to move" << endl;
           coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           moveToBlock(timeStep, blockPosition);
           closeGripper(gripperservo);
@@ -123,7 +124,8 @@ vector<coordinate> scanForBlocks(int timeStep) {
   const int measureTimeInterval = 1;  // wait this many simulation timesteps before measuring
   const tuple<double, double> motorTurnSpeed(0.5, -0.5);
   const double blockDetectThresh = 0.05;  // detect changes in ultrasound measuruments greater than this
-  const double angleToRotate = 160;
+  const double wallSeparationThresh = 0.08;   // detect blocks if they are this far from the wall
+  const double angleToRotate = 200;
 
   int i = 0;
 
@@ -144,7 +146,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
   bool jumpWasFall = true;
 
   double startBearing = bearing;
-  double endBearing = (startBearing + angleToRotate) > 360 ? (startBearing + angleToRotate - 360) : startBearing + angleToRotate;
+  double endBearing = constrainBearing(startBearing + angleToRotate);
   bool crossedNorthOnce = false;
   setMotorVelocity(motors, motorTurnSpeed);
 
@@ -153,7 +155,6 @@ vector<coordinate> scanForBlocks(int timeStep) {
     lastBearing = bearing;
     distance = getDistanceMeasurement(ds1);
     bearing = getCompassBearing(getDirection(compass));
-   // cout << bearing << endl;
 
     if (lastBearing < endBearing && bearing >= endBearing) {
       setMotorVelocity(motors, tuple<double, double>(0, 0));
@@ -184,7 +185,7 @@ vector<coordinate> scanForBlocks(int timeStep) {
           continue;
         }
 
-        if (get<0>(beforeJump) < wallDistance - blockDetectThresh) {
+        if (get<0>(beforeJump) < wallDistance - wallSeparationThresh) {
           blockPositions.push_back(getBlockPosition(afterLastJump, beforeJump, lastJumpWasFall, jumpWasFall, robotPosition, ULTRASOUND_BEAM_ANGLE));
         }
       }
@@ -199,7 +200,6 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
   coordinate position(pos[0], pos[2]);
   coordinate nextTarget = getPositionInfrontOfBlock(blockPosition, position);
   updateTargetPosition(nextTarget);
-
   while (robot->step(timeStep) != -1) {
     const double* bearing = getDirection(compass);
     pos = getLocation(gps);
@@ -214,6 +214,22 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
       cout << "Arrived" << endl;
+      break;
+    }
+  }
+}
+
+void turnToStartBearing(int timeStep, double shiftFromStart) {
+  const double* bearingVector = getDirection(compass);
+  double bearing = constrainBearing(getCompassBearing(bearingVector) + shiftFromStart);
+  updateTargetBearing(bearing);
+
+  while (robot->step(timeStep) != -1) {
+    const double* bearingVector = getDirection(compass);
+    tuple<double, double> motorSpeeds = turnToTargetBearing(bearingVector);
+    setMotorVelocity(motors, motorSpeeds);
+    if (hasReachedTargetBearing()) {
+      cout << "reached starting position" << endl;
       break;
     }
   }

@@ -17,9 +17,12 @@ struct PIDState {
 };
 
 void updateTargetPosition(coordinate newTarget);
+void updateTargetBearing(double newBearing);
 void tweakBlockDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance);
 bool hasReachedPosition();
 bool hasFinishedTurning();
+bool hasReachedTargetBearing();
+std::tuple<double, double> turnToTargetBearing(const double* currentBearingVector);
 std::tuple<double, double> moveToPosition(coordinate currentPosition, const double* currentBearingVector);
 double turnToBearing(double bearing, double currentBearing);
 double getPIDOutput(double error, PIDGains gains, PIDState state);
