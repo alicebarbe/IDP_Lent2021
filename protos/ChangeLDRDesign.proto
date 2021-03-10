@@ -157,7 +157,7 @@ Robot {
       device [
         RotationalMotor {
           name "wheel1"
-          maxTorque 1
+          maxTorque 10000
         }
         PositionSensor {
           name "Rev5_sensor"
