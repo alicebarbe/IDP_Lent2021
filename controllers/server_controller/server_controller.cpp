@@ -44,6 +44,8 @@ coordinate green_position;
 
 bool green_scan_complete = false;
 bool red_scan_complete = false;
+char green_blocks_collected = 0;
+char red_blocks_collected = 0;
 
 
 
@@ -73,8 +75,8 @@ int main(int argc, char** argv) {
 			case(12):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
 			case(22):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
 			case(13):break;																					//green robot has found a green block, Good!
-			case(14):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), true); break;		//green robot has found a red block, add it to red list
-			case(23):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), true); break;		//red robot has found a green block, add it to green list
+			case(14):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true); break;		//green robot has found a red block, add it to red list
+			case(23):add_block_to_list(1, get<1>(red_target_list[0]), get<2>(red_target_list[0]), true); break;		//red robot has found a green block, add it to green list
 			case(24):break;																					//red robot has found a red block, Good!
 			case(16):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
 			case(26):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go

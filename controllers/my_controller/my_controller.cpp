@@ -183,6 +183,9 @@ void dealwithblock(void) {
     openTrapDoor(trapdoorservo);
     timeDelay(timeStep, 15);
     if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
+        closeGripper(gripperservo);
+        timeDelay(timeStep, 20);
+        moveForward(timeStep, -0.15);
         collectblock();                                                                 //collect block
         sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
         sendRobotLocation(gps, robotColour, emitter);
@@ -191,6 +194,7 @@ void dealwithblock(void) {
     else if (abs(checkColour(colourSensor) - robotColour) == 1) {                       //if block is other colour
         closeTrapDoor(trapdoorservo);
         timeDelay(timeStep, 15);
+        moveForward(timeStep, -0.2);
         sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
         sendRobotLocation(gps, robotColour, emitter);
         sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
@@ -198,9 +202,10 @@ void dealwithblock(void) {
 }
 
 void collectblock(void) {
+  openGripper(gripperservo);
   moveForward(timeStep, eatBlockDistance);
   closeTrapDoor(trapdoorservo);
-}
+  }
 
 void moveForward(int timeStep, double distance) {
   const double* bearing = getDirection(compass);

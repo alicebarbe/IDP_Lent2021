@@ -20,7 +20,7 @@ Robot {
       name "solid(2)"
       boundingObject USE battery
       physics Physics {
-        mass 0.5
+        mass 1
       }
     }
     Compass {
@@ -297,7 +297,7 @@ Robot {
               DistanceSensor {
                 translation 0.0025 -0.029917 -0.03473
                 lookupTable[ 0 0 0, 2.4 2.4 0]
-                rotation  0.995 0 -0.02 -1.570796
+                rotation   0 1 0 0.01
                 children [
                   Shape {
                     geometry Sphere {
