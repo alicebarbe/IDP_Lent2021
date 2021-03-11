@@ -172,7 +172,7 @@ bool emergencyChecker(void* emergencyParams) {
         // green robot is in the way of the red robot's trajectory, it needs to turn!
         cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
     }*/
-
+    /*
     if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.5) {
         cout << robotColour << ": I'm going to get run over!" << endl;
         if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
@@ -184,7 +184,7 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax;
         }
     }
-
+    */
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.35) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
         if (robotColour == GREEN_ROBOT) {

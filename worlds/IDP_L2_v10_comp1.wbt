@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.3019684993556037 -0.9252950325907293 -0.2294430823970203 1.6182046202517983
-  position -3.4610077634253607 2.309307140126329 -0.4146933618882446
+  orientation 0.3876312822803314 -0.8636717466439667 -0.3222004082037537 4.975780143968444
+  position 2.690415850810968 2.064662076430586 1.2157223180824568
 }
 Background {
   skyColor [
@@ -30,10 +30,6 @@ Floor {
   size 2.4 2.4
   appearance Asphalt {
   }
-}
-ChangeLDRDesign {
-  translation -6.21882e-08 0.0500015 0.39
-  rotation 0.5773509358554485 0.5773509358554485 0.5773489358556708 -2.094395307179586
 }
 target {
   translation 0.7396 0.05 1.0751
@@ -141,13 +137,20 @@ DEF WALL_4 Solid {
   name "solid(3)"
   boundingObject USE WALL_SHAPE
 }
+Robot {
+  translation 0 0.06 0
+  rotation 1 0 0 1.5708
+  children [
+    LightSensor {
+      rotation 0 1 0 -1.57
+      lookupTable [
+        0 0 0
+        4 4 0
+      ]
+    }
+  ]
+  controller "my_controller"
+}
 TexturedBackgroundLight {
   texture "empty_office"
-}
-Laptop {
-  translation 1.53 0.55 3.24
-}
-ChangeLDRDesign {
-  translation -3.34591e-08 0.0499988 -0.39
-  rotation -0.5773509358554485 0.5773509358554485 0.5773489358556708 2.0944
 }
