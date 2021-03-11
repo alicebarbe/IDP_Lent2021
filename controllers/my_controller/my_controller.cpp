@@ -35,6 +35,7 @@ using namespace webots;
 using namespace std;
 
 bool emergencyChecker(void* emergencyParams);
+bool bypassEmergencyChecker(void* emergencyParams);
 vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
@@ -103,6 +104,11 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+bool bypassEmergencyChecker(void* emergencyParams) {
+  // use this to avoid checking emergencies within an emergency
+  return false;
+}
+
 bool emergencyChecker(void* emergencyParams) {
   //Put any emergency checking here
   // This function can be blocking (ie with a loop in it)
@@ -117,6 +123,7 @@ bool emergencyChecker(void* emergencyParams) {
       switch (get<0>(*receivedData) % 100) {
       case(99):
         cout << "Robot" << robotColour << ": Something bad has happened" << endl;
+        timeDelay(5, bypassEmergencyChecker);
         return false;
         break;
       }
