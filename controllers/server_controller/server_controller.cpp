@@ -30,6 +30,7 @@ void add_block_to_list(int identifier, double x_coordinate, double z_coordinate,
 void pathfind(int robot_identifier);
 double distance_from_robot(int robot_identifier, double x_coordinate, double z_coordinate);
 void tell_robot_go_home(int robot_identifier);
+void send_emergency_message(int robot_identifier);
 
 
 
@@ -63,8 +64,6 @@ int main(int argc, char** argv) {
 
 		if (received_data) {
 			cout << "Server: " << get<0>(*received_data) << " , "<< get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
-
-			
 			switch (get<0>(*received_data)) {
 			case(110):tell_robot_scan(1); green_scan_complete = false; break;								//green robot has sent hello message
 			case(210):tell_robot_scan(2); red_scan_complete = false; break;									//red robot has sent hello message
@@ -78,13 +77,11 @@ int main(int argc, char** argv) {
 			case(240):red_blocks_collected++; break;																					//red robot has found a red block, Good!
 			case(160):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
 			case(260):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go
-			case(170):
-				green_target_list.erase(green_target_list.begin());
-		
-				//if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
+			case(170):green_target_list.erase(green_target_list.begin()); send_emergency_message(2);
+				if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
 				pathfind(1); break;																			//green robot has dealt with its block, remove it from its list and tell it where to go next
 			case(270):red_target_list.erase(red_target_list.begin());
-				//if (red_blocks_collected == 4) { tell_robot_go_home(2); break; }
+				if (red_blocks_collected == 4) { tell_robot_go_home(2); break; }
 				pathfind(2); break;																			//red robot has dealt with its block, remove it from its list and tell it where to go next
 			}
 		}
@@ -146,28 +143,25 @@ void add_block_to_list(int robot_identifier, double x_coordinate, double z_coord
 		if (green_target_list.size() < 4 || known_colour == true) {			//if the green list isn't full or if we know the block is green
 			green_target_list.push_back(distance_and_coordinate(distance_from_robot(1, x_coordinate, z_coordinate),x_coordinate, z_coordinate));		
 		}
-		else {                      //if the green list already has 4 blocks and we don't know the blocks colour add to red list
+		else                         //if the green list already has 4 blocks and we don't know the blocks colour add to red list
 			red_target_list.push_back(distance_and_coordinate(distance_from_robot(2, x_coordinate, z_coordinate), x_coordinate, z_coordinate));
-		}
 	}
 	else if (robot_identifier == 2) {			//if the red robot found it during scanning, or if the green robot found a red block
 		if (red_target_list.size() < 4 || known_colour == true) {
 			red_target_list.push_back(distance_and_coordinate(distance_from_robot(2, x_coordinate, z_coordinate), x_coordinate, z_coordinate));
 		}
-		else {
+		else
 			green_target_list.push_back(distance_and_coordinate(distance_from_robot(1, x_coordinate, z_coordinate), x_coordinate, z_coordinate));
-		}
 	}
 }
 
 void pathfind(int robot_identifier) {
-	int length_of_green_list = 0;
-	int length_of_red_list = 0;
-	length_of_red_list = red_target_list.size();
-	length_of_green_list = green_target_list.size();
+	int length_of_red_list = red_target_list.size();
+	int length_of_green_list = green_target_list.size();
+	
 	message new_target_message{};
-	if ((robot_identifier == 1 || robot_identifier == 3) && length_of_green_list) { //3 is  both red and green - this happens when first scan is done
-		for (char i = 0; i < green_target_list.size(); i++)										//update distances for all blocks on green list
+	if (robot_identifier == 1 || robot_identifier == 3) { //3 is  both red and green - this happens when first scan is done
+		for (char i = 0; i < length_of_green_list; i++)										//update distances for all blocks on green list
 		{
 			get<0>(green_target_list[i]) = distance_from_robot(1, get<1>(green_target_list[i]), get<2>(green_target_list[i]));
 		}
@@ -175,8 +169,8 @@ void pathfind(int robot_identifier) {
 		new_target_message = { 100, get<1>(green_target_list[0]), get<2>(green_target_list[0]) }; //send next target (the closest)
 		emitData(emitter, (const void*) &new_target_message, 20);
 	}
-	if ((robot_identifier == 2 || robot_identifier == 3) && length_of_red_list) {
-		for (char i=0; i < red_target_list.size(); i++)
+	if (robot_identifier == 2 || robot_identifier == 3) {
+		for (char i=0; i < length_of_red_list; i++)
 		{
 			get<0>(red_target_list[i]) = distance_from_robot(2, get<1>(red_target_list[i]), get<2>(red_target_list[i]));
 		}
@@ -212,4 +206,9 @@ void tell_robot_go_home(int robot_identifier) {
 		new_target_message = { 200, 0, 0.4 };														//send next target green home
 		emitData(emitter, (const void*)&new_target_message, 20);
 	}
+}
+
+void send_emergency_message(int robot_identifier) {
+	message new_target_message = message( 99 + robot_identifier * 100, 0, -0.4 );														//send next target green home
+	emitData(emitter, (const void*) &new_target_message, 20);
 }
