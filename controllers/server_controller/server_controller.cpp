@@ -88,12 +88,26 @@ int main(int argc, char** argv) {
 			case(170):green_target_list.erase(green_target_list.begin()); 
 				if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
 				if (green_target_list.size() != 0) { pathfind(1); break; }																			//green robot has dealt with its block, remove it from its list and tell it where to go next
-				else { green_robot_waiting = true; break; }
+				else {
+					green_robot_waiting = true;
+					tell_robot_go_home(1);
+					break;
+				}
 			case(270):red_target_list.erase(red_target_list.begin());
 				if (red_blocks_collected == 4) { tell_robot_go_home(2); break; }
 				if (red_target_list.size() != 0) { pathfind(2); break; }
-				else { red_robot_waiting = true; break; }
-																							//red robot has dealt with its block, remove it from its list and tell it where to go next
+				else {
+					red_robot_waiting = true;
+					tell_robot_go_home(2);
+					break;
+				}
+																						//red robot has dealt with its block, remove it from its list and tell it where to go next
+			}
+			if (red_robot_waiting && green_robot_waiting) {
+				tell_robot_go_home(1);
+				tell_robot_go_home(2);
+				tell_robot_scan(1);
+				tell_robot_scan(2);
 			}
 		}
 		
@@ -201,12 +215,14 @@ void tell_robot_go_home(int robot_identifier) {
 		message go_home_message{};
 		go_home_message = { 190, 0, -0.4 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20); 
+		green_robot_waiting = 1;
 	}
 	else if (robot_identifier == 2)
 	{
 		message go_home_message{};
 		go_home_message = { 290, 0, 0.4 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20);
+		red_robot_waiting = 1;
 	}
 }
 
