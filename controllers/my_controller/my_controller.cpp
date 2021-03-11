@@ -297,7 +297,8 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
     timeDelay(15, emergencyFunc, emergencyParams);
-    if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
+    if (checkColour(colourSensor) == robotColour) {   
+      cout << ((robotColour == RED_ROBOT) ? "Red " : "Green ") << "block identified" << endl; //if block is same colour as robot
       closeGripper(gripperservo);
       closeTrapDoor(trapdoorservo);
       timeDelay(20, emergencyFunc, emergencyParams);
@@ -309,6 +310,7 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
       break;
     }
     else if (checkColour(colourSensor) != 0) {                       //if block is other colour
+      cout << ((robotColour == RED_ROBOT) ? "Green " : "Red ") << "block found by opposite colour robot, discarding" << endl;
       closeTrapDoor(trapdoorservo);
       timeDelay(15, emergencyFunc, emergencyParams);
       moveForward(-0.2, emergencyFunc);
