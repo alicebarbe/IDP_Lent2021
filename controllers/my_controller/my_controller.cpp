@@ -293,12 +293,20 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
 }
 
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
+  const double distanceToFloorThresh = 0.06;
   openGripper(gripperservo);
   openTrapDoor(trapdoorservo);
   timeDelay(10, emergencyFunc, emergencyParams);
   moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
   closeTrapDoor(trapdoorservo);
   timeDelay(20, emergencyFunc, emergencyParams);
+  if (getDistanceMeasurement(ds1) <= distanceToFloorThresh) {
+    openTrapDoor(trapdoorservo);
+    moveForward(0.1, emergencyFunc, emergencyParams);
+    closeTrapDoor(trapdoorservo);
+    timeDelay(20, emergencyFunc, emergencyParams);
+    moveForward(-0.2, emergencyFunc, emergencyParams);
+    }
   }
 
 void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams) {
