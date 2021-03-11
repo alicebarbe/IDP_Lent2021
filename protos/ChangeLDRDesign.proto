@@ -20,7 +20,7 @@ Robot {
       name "solid(2)"
       boundingObject USE battery
       physics Physics {
-        mass 1
+        mass 0.5
       }
     }
     Compass {
