@@ -72,7 +72,7 @@ void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
-  double expectedDist = displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
+  double expectedDist = getExpectedDistanceOfBlock(robotPosition, currentBearingVector);
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
@@ -190,6 +190,13 @@ double getWallDistance(const coordinate robotPos, double angle) {
   boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+}
+
+double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector) {
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
+  coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
+
+  return displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
 }
 
 coordinate getTargetPosition() {

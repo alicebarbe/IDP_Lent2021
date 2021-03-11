@@ -40,10 +40,11 @@ vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyPa
 void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
-void moveToBlock(coordinate blockPosition, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void sendBlockPositions(vector<coordinate> blockPositions);
+void confirmBlockPosition(coordinate robotPos, coordinate blockPos);
 
 int robotColour;
 
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
           break;
         case(00):
           blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
-          moveToBlock(blockPosition, emergencyChecker);
+          moveToPosition(blockPosition, true, emergencyChecker);
           dealwithblock(emergencyChecker);
           break;
         case(99):
@@ -271,7 +272,7 @@ void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyP
   }
 }
 
-void moveToBlock(coordinate blockPosition, bool (*emergencyFunc)(void*), void* emergencyParams) {
+void moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams) {
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
   updateTargetPosition(nextTarget);
@@ -283,7 +284,7 @@ void moveToBlock(coordinate blockPosition, bool (*emergencyFunc)(void*), void* e
     tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
     setMotorVelocity(motors, motor_speeds);
 
-    if (canUseDistanceSensor()) {
+    if (canUseDistanceSensor() && positionIsBlock) {
       double distance = getDistanceMeasurement(ds1);
       tweakTargetDistanceFromMeasurement(robotPos, bearing, distance);
     }
@@ -327,4 +328,7 @@ void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyPar
       break;
     };
   }
+}
+
+void confirmBlockPosition(coordinate robotPos, coordinate blockPos) {
 }
