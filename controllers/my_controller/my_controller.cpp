@@ -94,6 +94,9 @@ int main(int argc, char** argv) {
           moveToPosition(blockPosition, true, emergencyChecker);
           dealwithblock(emergencyChecker);
           break;
+        case(90):
+            moveToPosition(coordinate(get<1>(*receivedData), get<2>(*receivedData)), false, emergencyChecker); 
+            break;
         case(99):
           cout << "something bad has happened";
           break;

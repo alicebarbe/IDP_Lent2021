@@ -154,7 +154,7 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
   double blockAvgAngle = 0;
   double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
 
-  cout << "block width: " << abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) << "Expected block width: " << BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance << endl;
+  //cout << "block width: " << abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) << "Expected block width: " << BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance << endl;
   if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle + 0.6 * BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) {
     // block is not being obscured by anything else
     blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
