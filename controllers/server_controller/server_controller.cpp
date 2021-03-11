@@ -106,8 +106,6 @@ int main(int argc, char** argv) {
 			if (red_robot_waiting && green_robot_waiting) {
 				tell_robot_go_home(1);
 				tell_robot_go_home(2);
-				tell_robot_scan(1);
-				tell_robot_scan(2);
 			}
 		}
 		

@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
           }
           break;
         case(90):
+            cout << "I am going home" << endl;
             moveToPosition(coordinate(get<1>(*receivedData), get<2>(*receivedData)), false, emergencyChecker); 
             break;
         case(99):
@@ -294,11 +295,16 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
 
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
   const double distanceToFloorThresh = 0.06;
+  static char blocks_collected = 0;
   openGripper(gripperservo);
   openTrapDoor(trapdoorservo);
   timeDelay(10, emergencyFunc, emergencyParams);
   moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
-  closeTrapDoor(trapdoorservo);
+  if (blocks_collected < 3) {
+      closeTrapDoor(trapdoorservo);
+  }
+  else { closeGripper(gripperservo); }
+  blocks_collected++;
   timeDelay(20, emergencyFunc, emergencyParams);
   if (getDistanceMeasurement(ds1) <= distanceToFloorThresh) {
     openTrapDoor(trapdoorservo);
