@@ -199,15 +199,15 @@ double distance_from_robot(int robot_identifier, double x_coordinate, double z_c
 void tell_robot_go_home(int robot_identifier) {
 	if (robot_identifier == 1)
 	{
-		message new_target_message{};
-		new_target_message = { 100, 0, -0.4 };														//send next target green home
-		emitData(emitter, (const void*)&new_target_message, 20); 
+		message go_home_message{};
+		go_home_message = { 190, 0, -0.4 };														//send next target green home
+		emitData(emitter, (const void*)&go_home_message, 20); 
 	}
 	else if (robot_identifier == 2)
 	{
-		message new_target_message{};
-		new_target_message = { 200, 0, 0.4 };														//send next target green home
-		emitData(emitter, (const void*)&new_target_message, 20);
+		message go_home_message{};
+		go_home_message = { 290, 0, 0.4 };														//send next target green home
+		emitData(emitter, (const void*)&go_home_message, 20);
 	}
 }
 
