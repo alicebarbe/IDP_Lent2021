@@ -32,6 +32,7 @@ bool forwardStage = false;
 bool reachedPosition = false;
 bool useDistanceSensor = true;
 bool canReverse = false;
+bool maintainingBearing = false;
 
 double targetBearing; 
 bool reachedBearing = false;
@@ -47,6 +48,7 @@ void updateTargetPosition(coordinate newTarget, bool reverse) {
   forwardStage = false;
   reachedPosition = false;
   useDistanceSensor = true;
+  maintainingBearing = false;
   canReverse = reverse;
 
   ForwardPIDState = PIDState{ 0, 0 };
@@ -59,6 +61,7 @@ void updateTargetDistance(coordinate newTarget, bool reverse) {
   forwardStage = true;
   reachedPosition = false;
   useDistanceSensor = true;
+  maintainingBearing = false;
   canReverse = reverse;
 
   ForwardPIDState = PIDState{ 0, 0 };
@@ -72,7 +75,7 @@ void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
-  double expectedDist = displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
+  double expectedDist = getExpectedDistanceOfBlock(robotPosition, currentBearingVector);
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
@@ -85,6 +88,10 @@ bool hasReachedPosition() {
 
 bool canUseDistanceSensor() {
   return !turningStage && useDistanceSensor;
+}
+
+bool isMaintainingTargetBearing() {
+  return maintainingBearing;
 }
 
 bool hasReachedTargetBearing() {
@@ -115,8 +122,10 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
     double current_bearing = getCompassBearing(currentBearingVector);
 
     turning_speed = getBearingCorrection(target_bearing, current_bearing);
+    maintainingBearing = false;
     if (abs(getBearingDifference(current_bearing, target_bearing)) < turnOnlyThresh) {
       forwardStage = true;
+      maintainingBearing = true;
     }
   }
   if (forwardStage) {
@@ -154,7 +163,7 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
   double blockAvgAngle = 0;
   double blockAvgDistance = (get<0>(afterLastJump) + get<0>(beforeJump)) / 2;
 
-  cout << "block width: " << abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) << "Expected block width: " << BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance << endl;
+  //cout << "block width: " << abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) << "Expected block width: " << BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance << endl;
   if (abs(getBearingDifference(get<1>(afterLastJump), get<1>(beforeJump))) >= sensorBeamAngle + 0.6 * BLOCK_SIZE * RAD_TO_DEG / blockAvgDistance) {
     // block is not being obscured by anything else
     blockAvgAngle = (get<1>(afterLastJump) + get<1>(beforeJump)) / 2;
@@ -172,6 +181,10 @@ coordinate getBlockPosition(tuple<double, double> afterLastJump, tuple<double, d
     cout << "Not possible to accurately find block, ignoring" << endl;
   }
 
+  return getBlockPositionFromAngleAndDistance(robotPosition, blockAvgDistance, blockAvgAngle);
+}
+
+coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double blockAvgDistance, double blockAvgAngle) {
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, blockAvgAngle);
   double block_x = robotPosition.x + rotatedSensorDisp.x + blockAvgDistance * cos(blockAvgAngle * DEG_TO_RAD);
   double block_z = robotPosition.z + rotatedSensorDisp.z + blockAvgDistance * sin(blockAvgAngle * DEG_TO_RAD);
@@ -190,6 +203,13 @@ double getWallDistance(const coordinate robotPos, double angle) {
   boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+}
+
+double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector) {
+  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
+  coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
+
+  return displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
 }
 
 coordinate getTargetPosition() {
