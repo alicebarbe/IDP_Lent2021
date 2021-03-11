@@ -9,6 +9,7 @@
 #include "Coordinate.hpp"
 #include "SimulationParameters.hpp"
 #include "Movement.hpp"
+#include "Coordinate.hpp"
 
 using namespace std;
 
@@ -66,4 +67,8 @@ double getPIDOutput(double error, PIDGains gains, PIDState state) {
     state.integral += (abs(error) < gains.integralThresh) ? gains.ki * error : 0;
   }
   return (abs(error) > gains.moveThresh) ? error * gains.kp + state.integral + diff : 0;
+}
+
+double distanceBetweenPoints(coordinate pos1, coordinate pos2) {
+    return sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.z - pos2.z, 2));
 }

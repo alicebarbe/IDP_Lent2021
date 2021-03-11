@@ -60,6 +60,8 @@ Receiver* receiver = initReceiver(robot, "receiver");
 Emitter* emitter = initEmitter(robot, "emitter");
 
 int timeStep = (int)robot->getBasicTimeStep();
+coordinate otherRobotPosition;
+int emergencyCounterMax = 100; // get position every this many iterations
 
 int main(int argc, char** argv) {
   // get the time step of the current world.
@@ -98,6 +100,12 @@ int main(int argc, char** argv) {
           break;
         }
       }
+      
+      if (floor(get<0>(*receivedData) / 100) == (3 - robotColour)) {
+          if (get<0>(*receivedData) % 100 == 20) {
+              otherRobotPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+          }
+      }
     }
   }
   delete robot;
@@ -117,6 +125,7 @@ bool emergencyChecker(void* emergencyParams) {
   // Note that some blocking actions call others therefore 
   // exiting out does not always take you to the very top - this should likely be changed
 
+  static int emergencyCounter = 0; // to avoid polling position every single time
   message* receivedData = receiveData(receiver);
   if (receivedData) {
     if (floor(get<0>(*receivedData) / 100) == robotColour) {
@@ -129,6 +138,26 @@ bool emergencyChecker(void* emergencyParams) {
       }
     }
   }
+
+  // make green robot stop if the red robot is too close
+  if (emergencyCounter >= emergencyCounterMax) {
+    sendRobotLocation(gps, robotColour, emitter);
+    coordinate currentRobotPosition = getLocation(gps);
+    if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.5) {
+        cout << "yikes, the red robot's personal space has been violated!" << endl;
+        if (robotColour == GREEN_ROBOT) {
+            cout << "Green robot stops" << endl;
+            setMotorVelocity(motors, tuple<double, double>(0, 0));
+            timeDelay(emergencyCounterMax, bypassEmergencyChecker);
+        }
+    }
+    emergencyCounter = 0;
+  }
+  emergencyCounter++;
+
+  // make robot give up on a task if it's been at it for too long
+
+  return false;
 }
 
 void sendBlockPositions(vector<coordinate> blockPositions) {
@@ -323,7 +352,7 @@ void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyPar
     if (j == delayLength) {
       break;
     }
-    if (emergencyChecker(emergencyParams)) {
+    if (emergencyFunc(emergencyParams)) {
       break;
     };
   }

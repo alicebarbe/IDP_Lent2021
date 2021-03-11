@@ -188,7 +188,7 @@ void pathfind(int robot_identifier) {
 double distance_from_robot(int robot_identifier, double x_coordinate, double z_coordinate) {
 	if(robot_identifier == 1)
 	{
-		return  sqrt(pow((x_coordinate - get<0>(green_position)),2) + pow((z_coordinate - get<1>(green_position)),2));   //use pythagoras to get distance to coordinates from greeen robot
+		return  sqrt(pow((x_coordinate - get<0>(green_position)),2) + pow((z_coordinate - get<1>(green_position)),2));   //use pythagoras to get distance to coordinates from green robot
 	}
 	if (robot_identifier == 2)
 	{
