@@ -4,7 +4,7 @@ PROTO ChangeLDRDesign [
  
 ]
 {
-Robot {
+DEF IDPROBOT Robot {
   translation IS translation
   rotation IS rotation
   children [
@@ -35,7 +35,7 @@ Robot {
       ]
       name "compass"
     }
-    GPS {
+    DEF ROBOT_GPS GPS {
       translation 0.080065 -0.004 0.023971
       rotation 9.381857096790023e-07 0.7071067811862364 0.7071067811862364 3.14159
       children [
