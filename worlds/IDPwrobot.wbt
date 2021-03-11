@@ -35,42 +35,42 @@ ChangeLDRDesign {
   translation -6.21882e-08 0.0500015 0.39
   rotation 0.5773509358554485 0.5773509358554485 0.5773489358556708 -2.094395307179586
 }
-target {
-  translation -0.639 0.05 -0.18
+target {​​​​
+  translation 0.7396 0.05 1.0751
   name "target(9)"
-}
-target {
-  translation -0.793 0.05 0.4357
+}​​​​
+target {​​​​
+  translation -0.3839 0.05 0.42
   name "target(8)"
-}
-target {
-  translation -0.1633 0.05 0.8714
+}​​​​
+target {​​​​
+  translation -0.8766 0.05 -0.8046
   name "target(7)"
-}
-target {
-  translation 1.0298 0.05 -0.2533
+}​​​​
+target {​​​​
+  translation 0.9714 0.05 1.1059
   name "target(6)"
-}
-target {
-  translation 0.366 0.05 0.7654
+}​​​​
+target {​​​​
+  translation 0.311 0.05 1.0743
   colour 0 1 0
   name "target(5)"
-}
-target {
-  translation -0.6911 0.05 -0.7727
+}​​​​
+target {​​​​
+  translation -0.9458 0.05 -0.0344
   colour 0 1 0
   name "target(1)"
-}
-target {
-  translation 0.8205 0.05 -0.8658
+}​​​​
+target {​​​​
+  translation -0.5205 0.05 0.7057
   colour 0 1 0
   name "target(2)"
-}
-target {
-  translation 0.3299 0.05 -0.8002
+}​​​​
+target {​​​​
+  translation 0.1102 0.05 -0.8416
   colour 0 1 0
   name "target(3)"
-}
+}​​​​
 DEF Floor_colour Solid {
   translation 0 0.0001 0.4
   children [
