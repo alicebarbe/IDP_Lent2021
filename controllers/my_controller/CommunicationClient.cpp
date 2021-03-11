@@ -66,6 +66,11 @@ void sendRobotLocation(GPS* gps, int robotIdentifier, Emitter* emitter) {
 	emitData(emitter,(const void*) &locationMessage, 20);
 }
 
+void sendRobotDestination(coordinate destination, int robotIdentifier, Emitter* emitter) {
+	const message locationMessage(robotIdentifier * 100 + 25, destination.x, destination.z);
+	emitData(emitter, (const void*)&locationMessage, 20);
+}
+
 void sendBlockLocation(coordinate blockPos, int robotIdentifier, Emitter* emitter) {
 	const message locationMessage(robotIdentifier * 100 + 50, blockPos.x, blockPos.z);
 	emitData(emitter, (const void*)&locationMessage, 20);

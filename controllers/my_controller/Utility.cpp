@@ -72,3 +72,12 @@ double getPIDOutput(double error, PIDGains gains, PIDState state) {
 double distanceBetweenPoints(coordinate pos1, coordinate pos2) {
     return sqrt(pow(pos1.x - pos2.x, 2) + pow(pos1.z - pos2.z, 2));
 }
+
+double distanceToTrajectory(coordinate currentPos, coordinate trajectoryPos1, coordinate trajectoryPos2) {
+    // calculate the distance from currentPos to the line between trajectoryPos1 and trajectoryPos2
+    coordinate trajectoryVector = trajectoryPos2 - trajectoryPos1;
+    coordinate currentVector = currentPos - trajectoryPos1;
+    double currentToPos1 = distanceBetweenPoints(currentPos, trajectoryPos1);
+    double dotProduct = trajectoryVector.x * currentVector.x + trajectoryVector.z * currentVector.z;
+    return sqrt(pow(currentToPos1, 2) - pow(dotProduct, 2));
+}

@@ -13,3 +13,4 @@ double constrainBearing(double bearing);
 coordinate rotateVector(const coordinate vector, double angle);
 double getPIDOutput(double error, PIDGains gains, PIDState state);
 double distanceBetweenPoints(coordinate pos1, coordinate pos2);
+double distanceToTrajectory(coordinate currentPos, coordinate trajectoryPos1, coordinate trajectoryPos2);

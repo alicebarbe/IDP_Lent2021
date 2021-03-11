@@ -21,6 +21,7 @@ void emitData(webots::Emitter* emitter, const void* data, int size);
 message* receiveData(webots::Receiver* receiver);
 void sayHello(int robotIdentifier, webots::Emitter* emitter);
 void sendRobotLocation(webots::GPS* gps, int robotIdentifier, webots::Emitter* emitter);
+void sendRobotDestination(coordinate destination, int robotIdentifier, webots::Emitter* emitter);
 void sendBlockLocation(coordinate blockPos, int robotIdentifier, webots::Emitter* emitter);
 void sendFinishedScan(int robotIdentifier, webots::Emitter* emitter);
 void sendBlockColour(int robotIdentifier, webots:: Emitter* emitter, int colour);

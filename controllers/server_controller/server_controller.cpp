@@ -44,6 +44,9 @@ coordinate_and_distance_list red_target_list;
 coordinate red_position;
 coordinate green_position;
 
+coordinate green_destination;
+coordinate red_destination;
+
 bool green_scan_complete = false;
 bool red_scan_complete = false;
 bool green_robot_waiting = false;
@@ -73,6 +76,10 @@ int main(int argc, char** argv) {
 			case(250):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), false); break;	//add found block location from scan to list for red
 			case(120):green_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update position of green robot
 			case(220):red_position = coordinate(get<1>(*received_data), get<2>(*received_data)); break;		//update position of red robot
+			
+			case(125):green_destination = coordinate(get<1>(*received_data), get<2>(*received_data)); break;	//update destination of green robot
+			case(225):red_destination = coordinate(get<1>(*received_data), get<2>(*received_data)); break;
+			
 			case(130):green_blocks_collected++;  break;															//green robot has found a green block, Good!
 			case(140):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true);	//green robot has found a red block, add it to red list
 				if (red_robot_waiting) {
@@ -211,14 +218,14 @@ void tell_robot_go_home(int robot_identifier) {
 	if (robot_identifier == 1)
 	{
 		message go_home_message{};
-		go_home_message = { 190, 0, -0.4 };														//send next target green home
+		go_home_message = { 190, 0.004, -0.47 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20); 
 		green_robot_waiting = 1;
 	}
 	else if (robot_identifier == 2)
 	{
 		message go_home_message{};
-		go_home_message = { 290, 0, 0.4 };														//send next target green home
+		go_home_message = { 290, -0.004, 0.47 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20);
 		red_robot_waiting = 1;
 	}

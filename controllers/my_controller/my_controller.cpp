@@ -63,7 +63,10 @@ Emitter* emitter = initEmitter(robot, "emitter");
 
 int timeStep = (int)robot->getBasicTimeStep();
 coordinate otherRobotPosition;
-int emergencyCounterMax = 100; // get position every this many iterations
+int emergencyCounterMax = 50; // get position every this many iterations
+
+coordinate currentDestination; // where we're headed
+coordinate otherRobotDestination; // where the other robot is headed
 
 int main(int argc, char** argv) {
   // get the time step of the current world.
@@ -94,12 +97,15 @@ int main(int argc, char** argv) {
           break;
         case(00):
           blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+          currentDestination = blockPosition;
           if (moveToPosition(blockPosition, true, emergencyChecker)) {
             dealwithblock(emergencyChecker);
           }
           break;
         case(90):
-            cout << "I am going home" << endl;
+            cout << "I am " << robotColour << " and I am going home" << endl;
+            currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+            //TO-DO: change the below to currentDestination instead?
             moveToPosition(coordinate(get<1>(*receivedData), get<2>(*receivedData)), false, emergencyChecker); 
             break;
         case(99):
@@ -148,29 +154,55 @@ bool emergencyChecker(void* emergencyParams) {
       if (get<0>(*receivedData) % 100 == 20) {
         otherRobotPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
       }
+      if (get<0>(*receivedData) % 100 == 25) {
+        otherRobotDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+      }
     }
   }
 
   // make green robot stop if the red robot is too close
   if (emergencyCounter >= emergencyCounterMax) {
     emergencyCounter = 0;
-    cout << robotColour << ": Checking distances" << endl;
+    //cout << robotColour << ": Checking distances" << endl;
     sendRobotLocation(gps, robotColour, emitter);
+    sendRobotDestination(currentDestination, robotColour, emitter);
     coordinate currentRobotPosition = getLocation(gps);
-    if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.5) {
+    /*
+    if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.8) {
+        // green robot is in the way of the red robot's trajectory, it needs to turn!
+        cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
+    }*/
+
+    if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.5) {
+        cout << robotColour << ": I'm going to get run over!" << endl;
+        if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
+            // green robot is in the way of the red robot's trajectory, it needs to turn!
+            cout << robotColour << " is trying to get out of " << 3 - robotColour << "'s way!" << endl;
+            // I wish I could make it move for real but this will (not) do for now
+            moveForward(-0.3, bypassEmergencyChecker, emergencyParams);
+            cout << "robot" << robotColour << " tried its besht" << endl;
+            emergencyCounter = emergencyCounterMax;
+        }
+    }
+
+    if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.35) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
         if (robotColour == GREEN_ROBOT) {
             cout << "Green robot stops" << endl;
             setMotorVelocity(motors, tuple<double, double>(0, 0));
             timeDelay(emergencyCounterMax, bypassEmergencyChecker);
-            cout << "Finished delay" << endl;
-            emergencyCounter = emergencyCounterMax;
+            //cout << "Finished delay" << endl;
+            emergencyCounter = emergencyCounterMax; // go straight back to checking if personal space is still violated
         }
     }
+
+    // make green robot turn away if red robot is going to run it over
+    //cout << robotColour << " is headed to " << currentDestination.x << " " << currentDestination.z << endl;
+    //cout << robotColour << " knows that the other robot is headed to " << otherRobotDestination.x << " " << otherRobotDestination.z << endl;
+    //sendRobotDestination(currentDestination, robotColour, emitter);
+    //cout << robotColour << " knows it's " << distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) << " away from trajectory" << endl;
   }
   emergencyCounter++;
-
-  // make robot give up on a task if it's been at it for too long
 
   return false;
 }
@@ -308,7 +340,7 @@ void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
   timeDelay(20, emergencyFunc, emergencyParams);
   if (getDistanceMeasurement(ds1) <= distanceToFloorThresh) {
     openTrapDoor(trapdoorservo);
-    moveForward(0.1, emergencyFunc, emergencyParams);
+    moveForward(0.15, emergencyFunc, emergencyParams);
     closeTrapDoor(trapdoorservo);
     timeDelay(20, emergencyFunc, emergencyParams);
     moveForward(-0.2, emergencyFunc, emergencyParams);
@@ -345,7 +377,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
   updateTargetPosition(nextTarget);
   bool hasConfirmedBlock = false;
   bool blockLost = false;
-  const double searchAngle = 2;
+  const double searchAngle = 5;
 
   while (robot->step(timeStep) != -1) {
     const double* bearing = getDirection(compass);
@@ -360,12 +392,14 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
       blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
       if (blockLost) {
-        turnToBearing(constrainBearing(getCompassBearing(bearing) + searchAngle), emergencyFunc, emergencyParams);
-        blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
-      }
-      if (blockLost) {
-        turnToBearing(constrainBearing(getCompassBearing(bearing) - searchAngle), emergencyFunc, emergencyParams);
-        blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
+        for (int i = -searchAngle; i < searchAngle; i++) {
+          turnToBearing(constrainBearing(getCompassBearing(bearing) + i), emergencyFunc, emergencyParams);
+          blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
+          cout << "angle is " << i << endl;
+          if (!blockLost) {
+            break;
+          }
+        }
       }
       hasConfirmedBlock = true;
     }
@@ -438,8 +472,11 @@ bool confirmBlockPosition(bool (*emergencyFunc)(void*), void* emergencyParams) {
       return true;
     }
 
-    cout << "Lost block!" << endl;
+    cout << robotColour << " lost a block!" << endl;
     return false;
+  }
+  if (emergencyFunc(emergencyParams)) {
+
   }
   return true;
 }
