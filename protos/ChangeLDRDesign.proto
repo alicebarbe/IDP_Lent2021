@@ -115,6 +115,8 @@ Robot {
       ]
       name "Pololu_Ball_Caster_with_34_Metal_Ball_v1"
       boundingObject USE caster
+      physics Physics {
+      }
     }
     Shape {
       appearance DEF silver PBRAppearance {
@@ -142,7 +144,7 @@ Robot {
       device [
         RotationalMotor {
           name "wheel2"
-          maxTorque 1
+          maxTorque 10000
         }
         PositionSensor {
           name "Rev4_sensor"
