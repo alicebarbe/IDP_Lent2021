@@ -143,21 +143,29 @@ bool emergencyChecker(void* emergencyParams) {
         break;
       }
     }
+    if (floor(get<0>(*receivedData) / 100) == (3 - robotColour)) {
+      if (get<0>(*receivedData) % 100 == 20) {
+        otherRobotPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+      }
+    }
   }
 
   // make green robot stop if the red robot is too close
   if (emergencyCounter >= emergencyCounterMax) {
+    emergencyCounter = 0;
+    cout << robotColour << ": Checking distances" << endl;
     sendRobotLocation(gps, robotColour, emitter);
     coordinate currentRobotPosition = getLocation(gps);
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.5) {
-        cout << "yikes, the red robot's personal space has been violated!" << endl;
+        cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
         if (robotColour == GREEN_ROBOT) {
             cout << "Green robot stops" << endl;
             setMotorVelocity(motors, tuple<double, double>(0, 0));
             timeDelay(emergencyCounterMax, bypassEmergencyChecker);
+            cout << "Finished delay" << endl;
+            emergencyCounter = emergencyCounterMax;
         }
     }
-    emergencyCounter = 0;
   }
   emergencyCounter++;
 
@@ -249,29 +257,39 @@ vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyPa
 }
 
 void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
+  const int numRetries = 2;
+  for (int i = 0; i < numRetries; i++) {
     gripBlock(gripperservo);
     timeDelay(20, emergencyFunc, emergencyParams);
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
     timeDelay(15, emergencyFunc, emergencyParams);
     if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
-        closeGripper(gripperservo);
-        closeTrapDoor(trapdoorservo);
-        timeDelay(20, emergencyFunc, emergencyParams);
-        moveForward(-0.15, emergencyFunc, emergencyParams);
-        collectblock(emergencyFunc, emergencyParams);                                                                 //collect block
-        sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
-        sendRobotLocation(gps, robotColour, emitter);
-        sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done dealing with this block
-    }   
-    else if (abs(checkColour(colourSensor) - robotColour) == 1) {                       //if block is other colour
-        closeTrapDoor(trapdoorservo);
-        timeDelay(15, emergencyFunc, emergencyParams);
-        moveForward(-0.2, emergencyFunc);
-        sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
-        sendRobotLocation(gps, robotColour, emitter);
-        sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
+      closeGripper(gripperservo);
+      closeTrapDoor(trapdoorservo);
+      timeDelay(20, emergencyFunc, emergencyParams);
+      moveForward(-0.15, emergencyFunc, emergencyParams);
+      collectblock(emergencyFunc, emergencyParams);                                                                 //collect block
+      sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
+      sendRobotLocation(gps, robotColour, emitter);
+      sendDealtwithBlock(robotColour, emitter);      //tell server I am done dealing with this block
+      break;
     }
+    else if (checkColour(colourSensor) != 0) {                       //if block is other colour
+      closeTrapDoor(trapdoorservo);
+      timeDelay(15, emergencyFunc, emergencyParams);
+      moveForward(-0.2, emergencyFunc);
+      sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
+      sendRobotLocation(gps, robotColour, emitter);
+      sendDealtwithBlock(robotColour, emitter);     //tell server I am done
+      break; 
+    }
+    else {          // if measurement failed
+      closeTrapDoor(trapdoorservo);
+      moveForward(-0.1, emergencyFunc);
+      moveForward(0.13, emergencyFunc);
+    }
+  }
 }
 
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
@@ -322,6 +340,9 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
     setMotorVelocity(motors, motor_speeds);
 
+    if (emergencyChecker(emergencyParams)) {
+      return false;
+    }
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
       blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
       if (blockLost) {
@@ -341,9 +362,6 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
       return true;
-    }
-    if (emergencyChecker(emergencyParams)) {
-      return false;
     }
     if (blockLost) {
       handleBlockLost();

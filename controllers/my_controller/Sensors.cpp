@@ -75,9 +75,10 @@ char checkColour(tuple<LightSensor*, LightSensor*> colourSensor)
 	if (get<0>(getLightMeasurement(colourSensor))) {
 		return 2;			//RED
 	}
-	if (get<1>(getLightMeasurement(colourSensor))) {
-		return 1;			//GREEN
-	}
+  if (get<1>(getLightMeasurement(colourSensor))) {
+    return 1;			//GREEN
+  }
+  else return 0;
 }
 
 
