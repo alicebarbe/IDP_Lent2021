@@ -34,17 +34,17 @@
 using namespace webots;
 using namespace std;
 
-vector<coordinate> scanForBlocks(int timeStep);
-void moveToBlock(int timeStep, coordinate blockPosition);
-void timeDelay(int timeStep, int warmupLength);
+bool emergencyChecker(void* emergencyParams);
+vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void moveToBlock(coordinate blockPosition, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void sendBlockPositions(vector<coordinate> blockPositions);
-void turnToBearing(int timeStep, double startBearing);
-void dealwithblock(void);
-void collectblock(void);
-void moveForward(int timeStep, double distance);
 
 int robotColour;
-vector<coordinate> targetPoints;
 
 // Webots sensors/actuators
 Robot *robot = new Robot();
@@ -63,7 +63,7 @@ int timeStep = (int)robot->getBasicTimeStep();
 int main(int argc, char** argv) {
   // get the time step of the current world.
   
-  timeDelay(timeStep, 5);
+  timeDelay(5, emergencyChecker);
 
   // identify what colour robot 
 
@@ -74,20 +74,26 @@ int main(int argc, char** argv) {
   while (robot->step(timeStep) != -1) {
     message* receivedData = receiveData(receiver);
     if (receivedData) {
+      vector<coordinate> targetPoints;
+      coordinate blockPosition;
+
       if (floor(get<0>(*receivedData) / 100) == robotColour) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
-          turnToBearing(timeStep, (robotColour == RED_ROBOT) ? 60 : 240);
-          targetPoints = scanForBlocks(timeStep);
+          turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
+          targetPoints = scanForBlocks(emergencyChecker);
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
           break;
-          case(00):
-          coordinate blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
-          moveToBlock(timeStep, blockPosition);
-          dealwithblock();
+        case(00):
+          blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+          moveToBlock(blockPosition, emergencyChecker);
+          dealwithblock(emergencyChecker);
+          break;
+        case(99):
+          cout << "something bad has happened";
           break;
         }
       }
@@ -97,13 +103,34 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+bool emergencyChecker(void* emergencyParams) {
+  //Put any emergency checking here
+  // This function can be blocking (ie with a loop in it)
+  // return false to resume the last action, 
+  // return true to cancel out of the last action - 
+  // Note that some blocking actions call others therefore 
+  // exiting out does not always take you to the very top - this should likely be changed
+
+  message* receivedData = receiveData(receiver);
+  if (receivedData) {
+    if (floor(get<0>(*receivedData) / 100) == robotColour) {
+      switch (get<0>(*receivedData) % 100) {
+      case(99):
+        cout << "Robot" << robotColour << ": Something bad has happened" << endl;
+        return false;
+        break;
+      }
+    }
+  }
+}
+
 void sendBlockPositions(vector<coordinate> blockPositions) {
   for (auto it = blockPositions.begin(); it != blockPositions.end(); it++) {
     sendBlockLocation(*it, robotColour, emitter);
   }
 }
 
-vector<coordinate> scanForBlocks(int timeStep) {
+vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyParams) {
   const int measureTimeInterval = 1;  // wait this many simulation timesteps before measuring
   const tuple<double, double> motorTurnSpeed(0.5, -0.5);
   const double blockDetectThresh = 0.05;  // detect changes in ultrasound measuruments greater than this
@@ -171,43 +198,49 @@ vector<coordinate> scanForBlocks(int timeStep) {
         }
       }
     }
+    if (emergencyChecker(emergencyParams)) {
+      break;
+    };
   }
   
   return blockPositions;
 }
 
-void dealwithblock(void) {
+void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
     gripBlock(gripperservo);
-    timeDelay(timeStep, 20);
+    timeDelay(20, emergencyFunc, emergencyParams);
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
-    timeDelay(timeStep, 15);
+    timeDelay(15, emergencyFunc, emergencyParams);
     if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
         closeGripper(gripperservo);
-        timeDelay(timeStep, 20);
-        moveForward(timeStep, -0.15);
-        collectblock();                                                                 //collect block
+        closeTrapDoor(trapdoorservo);
+        timeDelay(20, emergencyFunc, emergencyParams);
+        moveForward(-0.15, emergencyFunc, emergencyParams);
+        collectblock(emergencyFunc, emergencyParams);                                                                 //collect block
         sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
         sendRobotLocation(gps, robotColour, emitter);
         sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done dealing with this block
     }   
     else if (abs(checkColour(colourSensor) - robotColour) == 1) {                       //if block is other colour
         closeTrapDoor(trapdoorservo);
-        timeDelay(timeStep, 15);
-        moveForward(timeStep, -0.2);
+        timeDelay(15, emergencyFunc, emergencyParams);
+        moveForward(-0.2, emergencyFunc);
         sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
         sendRobotLocation(gps, robotColour, emitter);
         sendDealtwithBlock(robotColour, emitter);                                       //tell server I am done
     }
 }
 
-void collectblock(void) {
+void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
   openGripper(gripperservo);
-  moveForward(timeStep, eatBlockDistance);
+  openTrapDoor(trapdoorservo);
+  timeDelay(10, emergencyFunc, emergencyParams);
+  moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
   closeTrapDoor(trapdoorservo);
   }
 
-void moveForward(int timeStep, double distance) {
+void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams) {
   const double* bearing = getDirection(compass);
   coordinate bearingVector(-bearing[0], bearing[2]); // I dont like using the coordinate as a vector
   coordinate targetPosition = coordinate(getLocation(gps)) + bearingVector * distance;
@@ -225,10 +258,13 @@ void moveForward(int timeStep, double distance) {
       cout << "Arrived" << endl;
       break;
     }
+    if (emergencyChecker(emergencyParams)) {
+      break;
+    };
   }
 }
 
-void moveToBlock(int timeStep, coordinate blockPosition) {
+void moveToBlock(coordinate blockPosition, bool (*emergencyFunc)(void*), void* emergencyParams) {
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
   updateTargetPosition(nextTarget);
@@ -248,10 +284,13 @@ void moveToBlock(int timeStep, coordinate blockPosition) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
       break;
     }
+    if (emergencyChecker(emergencyParams)) {
+      break;
+    };
   }
 }
 
-void turnToBearing(int timeStep, double bearing) {
+void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams) {
   updateTargetBearing(bearing);
 
   while (robot->step(timeStep) != -1) {
@@ -264,15 +303,21 @@ void turnToBearing(int timeStep, double bearing) {
       cout << "reached starting position" << endl;
       break;
     }
+    if (emergencyChecker(emergencyParams)) {
+      break;
+    };
   }
 }
 
-void timeDelay(int timeStep, int delayLength) {
+void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams) {
   int j = 0;
   while (robot->step(timeStep) != -1) {
     j++;
     if (j == delayLength) {
       break;
     }
+    if (emergencyChecker(emergencyParams)) {
+      break;
+    };
   }
 }

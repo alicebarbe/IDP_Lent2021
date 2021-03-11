@@ -30,6 +30,7 @@ void add_block_to_list(int identifier, double x_coordinate, double z_coordinate,
 void pathfind(int robot_identifier);
 double distance_from_robot(int robot_identifier, double x_coordinate, double z_coordinate);
 void tell_robot_go_home(int robot_identifier);
+void send_emergency_message(int robot_identifier);
 
 
 
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
 			case(240):red_blocks_collected++; break;																					//red robot has found a red block, Good!
 			case(160):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
 			case(260):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go
-			case(170):green_target_list.erase(green_target_list.begin());
+			case(170):green_target_list.erase(green_target_list.begin()); send_emergency_message(2);
 				if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
 				pathfind(1); break;																			//green robot has dealt with its block, remove it from its list and tell it where to go next
 			case(270):red_target_list.erase(red_target_list.begin());
@@ -205,4 +206,9 @@ void tell_robot_go_home(int robot_identifier) {
 		new_target_message = { 200, 0, 0.4 };														//send next target green home
 		emitData(emitter, (const void*)&new_target_message, 20);
 	}
+}
+
+void send_emergency_message(int robot_identifier) {
+	message new_target_message = message( 99 + robot_identifier * 100, 0, -0.4 );														//send next target green home
+	emitData(emitter, (const void*) &new_target_message, 20);
 }
