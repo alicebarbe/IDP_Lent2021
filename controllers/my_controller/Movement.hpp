@@ -17,9 +17,9 @@ struct PIDState {
 };
 
 // Updating target functions
-void updateTargetPosition(coordinate newTarget, bool reverse=false);
+void updateTargetPosition(coordinate newTarget, bool reverse = false);
 void updateTargetBearing(double newBearing);
-void updateTargetDistance(coordinate newTarget, bool reverse=true);
+void updateTargetDistance(coordinate newTarget, bool reverse = true);
 void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance);
 
 // flag retrieval functions used to monitor control behavior
@@ -38,3 +38,4 @@ coordinate getPositionAroundBlock(coordinate blockPosition, coordinate robotPosi
 coordinate getBlockPosition(std::tuple<double, double> afterLastJump, std::tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
   coordinate robotPosition, const double sensorBeamAngle);
 double getWallDistance(const coordinate robotPos, double angle);
+double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector);
