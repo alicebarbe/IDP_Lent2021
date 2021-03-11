@@ -172,7 +172,7 @@ bool emergencyChecker(void* emergencyParams) {
         // green robot is in the way of the red robot's trajectory, it needs to turn!
         cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
     }*/
-    /*
+    
     if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.5) {
         cout << robotColour << ": I'm going to get run over!" << endl;
         if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
@@ -184,7 +184,7 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax;
         }
     }
-    */
+    
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.35) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
         if (robotColour == GREEN_ROBOT) {
@@ -297,8 +297,7 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
     openGripper(gripperservo);
     openTrapDoor(trapdoorservo);
     timeDelay(15, emergencyFunc, emergencyParams);
-    if (checkColour(colourSensor) == robotColour) {   
-      cout << ((robotColour == RED_ROBOT) ? "Red " : "Green ") << "block identified" << endl; //if block is same colour as robot
+    if (checkColour(colourSensor) == robotColour) {                                     //if block is same colour as robot
       closeGripper(gripperservo);
       closeTrapDoor(trapdoorservo);
       timeDelay(20, emergencyFunc, emergencyParams);
@@ -310,7 +309,6 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
       break;
     }
     else if (checkColour(colourSensor) != 0) {                       //if block is other colour
-      cout << ((robotColour == RED_ROBOT) ? "Green " : "Red ") << "block found by opposite colour robot, discarding" << endl;
       closeTrapDoor(trapdoorservo);
       timeDelay(15, emergencyFunc, emergencyParams);
       moveForward(-0.2, emergencyFunc);
