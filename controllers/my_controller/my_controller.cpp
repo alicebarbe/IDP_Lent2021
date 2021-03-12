@@ -305,17 +305,21 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
       closeTrapDoor(trapdoorservo);
       timeDelay(20, emergencyFunc, emergencyParams);
       moveForward(-0.15, emergencyFunc, emergencyParams);
-      collectblock(emergencyFunc, emergencyParams);                                                                 //collect block
-      sendBlockColour(robotColour, emitter, robotColour);                             //tell server block colour
+      collectblock(emergencyFunc, emergencyParams);       //collect block
+      coordinate robotPos(getLocation(gps));
+      double bearing = getCompassBearing(getDirection(compass));
+      sendBlockColour(robotColour, emitter, robotColour, getBlockPositionInGrabber(robotPos, bearing));                    //tell server block colour
       sendRobotLocation(gps, robotColour, emitter);
       sendDealtwithBlock(robotColour, emitter);      //tell server I am done dealing with this block
       break;
     }
     else if (checkColour(colourSensor) != 0) {                       //if block is other colour
       closeTrapDoor(trapdoorservo);
-      timeDelay(15, emergencyFunc, emergencyParams);
+      timeDelay(15, emergencyFunc, emergencyParams);    // is this necessary?
+      coordinate robotPos(getLocation(gps));
+      double bearing = getCompassBearing(getDirection(compass));
+      sendBlockColour(robotColour, emitter, (3 - robotColour), getBlockPositionInGrabber(robotPos, bearing));  //tell robot block is other colour
       moveForward(-0.2, emergencyFunc);
-      sendBlockColour(robotColour, emitter, (3 - robotColour));                       //tell robot block is other colour
       sendRobotLocation(gps, robotColour, emitter);
       sendDealtwithBlock(robotColour, emitter);     //tell server I am done
       break; 

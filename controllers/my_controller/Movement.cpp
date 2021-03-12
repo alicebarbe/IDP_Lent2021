@@ -210,6 +210,11 @@ double getWallDistance(const coordinate robotPos, double angle) {
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
 }
 
+coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing) {
+  coordinate rotatedFrontDisp = rotateVector(frontOfRobotDisplacement, bearing);
+  return robotPosition + rotatedFrontDisp;
+}
+
 double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector) {
   coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, getCompassBearing(currentBearingVector));
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
