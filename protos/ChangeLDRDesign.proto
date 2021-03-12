@@ -1,7 +1,7 @@
 PROTO ChangeLDRDesign [
   field  SFVec3f     translation     0 0 0
   field  SFRotation  rotation        1 0 0 -1.5708
- 
+    field SFString   name  "robot"
 ]
 {
 DEF IDPROBOT Robot {
@@ -499,5 +499,6 @@ DEF IDPROBOT Robot {
     ]
   }
   controller "my_controller"
+  name IS name
 }
 }
