@@ -68,7 +68,9 @@ int main(int argc, char** argv) {
 		message* received_data = receiveData(receiver);
 
 		if (received_data) {
-			cout << "Server: " << get<0>(*received_data) << " , "<< get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
+			if (get<0>(*received_data) != 125 && get<0>(*received_data) != 225 && get<0>(*received_data) != 220 && get<0>(*received_data) != 120) {
+				cout << "Server: " << get<0>(*received_data) << " , " << get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
+			}
 			switch (get<0>(*received_data)) {
 			case(110):tell_robot_scan(1); green_scan_complete = false; break;								//green robot has sent hello message
 			case(210):tell_robot_scan(2); red_scan_complete = false; break;									//red robot has sent hello message
@@ -93,7 +95,14 @@ int main(int argc, char** argv) {
 			case(160):green_scan_complete = true; if (red_scan_complete) { pathfind(3); }; break;			//green robot has finished scan, if red has too, tell them where to go
 			case(260):red_scan_complete = true; if (green_scan_complete) { pathfind(3); }; break;			//red robot has finished scan, if green has too, tell them wehre to go
 			case(170):green_target_list.erase(green_target_list.begin()); 
-				if (green_blocks_collected == 4) { tell_robot_go_home(1); break; }									//if we have all blocks, go home
+				if (green_blocks_collected == 4) { 
+					while (green_target_list.size())
+					{
+						red_target_list.push_back((distance_and_coordinate)green_target_list[0]);
+						green_target_list.erase(green_target_list.begin());
+					}
+					if (red_robot_waiting)pathfind(2);
+					tell_robot_go_home(1); break; }									//if we have all blocks, go home
 				if (green_target_list.size() != 0) { pathfind(1); break; }																			//green robot has dealt with its block, remove it from its list and tell it where to go next
 				else {
 					green_robot_waiting = true;
@@ -101,7 +110,15 @@ int main(int argc, char** argv) {
 					break;
 				}
 			case(270):red_target_list.erase(red_target_list.begin());
-				if (red_blocks_collected == 4) { tell_robot_go_home(2); break; }
+				if (red_blocks_collected == 4) { 
+					while (red_target_list.size())
+					{
+						green_target_list.push_back((distance_and_coordinate)red_target_list[0]);
+						red_target_list.erase(red_target_list.begin());
+					}
+					if (green_robot_waiting)pathfind(1);
+					tell_robot_go_home(2); 
+					break; }
 				if (red_target_list.size() != 0) { pathfind(2); break; }
 				else {
 					red_robot_waiting = true;
