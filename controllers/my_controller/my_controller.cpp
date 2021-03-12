@@ -356,7 +356,7 @@ void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams) {
 
 void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams) {
   const double* bearing = getDirection(compass);
-  coordinate bearingVector(-bearing[0], bearing[2]); // I dont like using the coordinate as a vector
+  coordinate bearingVector(-bearing[0], bearing[2]);  // I dont like using the coordinate as a vector
   coordinate targetPosition = coordinate(getLocation(gps)) + bearingVector * distance;
   updateTargetDistance(targetPosition);
 

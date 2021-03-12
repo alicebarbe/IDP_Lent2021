@@ -108,7 +108,7 @@ def count_blocks_in_correct_square(blocks):
         red_blocks_returned += 1
 
     elif ((abs(x) < start_square_size / 2) and
-           (abs(z - start_square_offset_z) < start_square_size / 2) and
+           (abs(z + start_square_offset_z) < start_square_size / 2) and
            colour_field.getSFVec3f()[0] == 1):
         # red block in red start_square
         green_blocks_returned += 1
@@ -155,8 +155,9 @@ for sim_num in range(NUM_SIMULATIONS):
     red_blocks_identified = 0
 
     timeout = 0
-    while supervisor.step(TIME_STEP) != -1 and timeout < 10:
+    while supervisor.step(TIME_STEP) != -1 and timeout < 20:
         timeout += 1
+
     supervisor.exportImage(os.path.join(DATA_SAVE_DIR, "{}_start_{}.jpg".format("test_image_export", sim_num)), 90)
 
     while supervisor.step(TIME_STEP) != -1:
