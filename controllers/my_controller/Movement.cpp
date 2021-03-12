@@ -68,7 +68,7 @@ void updateTargetDistance(coordinate newTarget, bool reverse) {
   RotationalPIDState = PIDState{ 0, 0 };
 }
 
-void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance) {
+bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance, double lostThreshold) {
   if (distance < ULTRASOUND_MIN_DISTANCE) {
     useDistanceSensor = false;
   }
@@ -76,10 +76,15 @@ void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
   double expectedDist = getExpectedDistanceOfBlock(robotPosition, currentBearingVector);
+  if (abs(distance - expectedDist) > lostThreshold) {
+    // provision if block is so far from where it should be that the block is gone
+    return false;
+  }
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
   targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
+  return true;
 }
 
 bool hasReachedPosition() {
@@ -203,6 +208,11 @@ double getWallDistance(const coordinate robotPos, double angle) {
   boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+}
+
+coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing) {
+  coordinate rotatedFrontDisp = rotateVector(frontOfRobotDisplacement, bearing);
+  return robotPosition + rotatedFrontDisp;
 }
 
 double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector) {

@@ -81,11 +81,11 @@ int main(int argc, char** argv) {
 			case(225):red_destination = coordinate(get<1>(*received_data), get<2>(*received_data)); break;
 			
 			case(130):green_blocks_collected++;  break;															//green robot has found a green block, Good!
-			case(140):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true);	//green robot has found a red block, add it to red list
+			case(140):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), true);	//green robot has found a red block, add it to red list
 				if (red_robot_waiting) {
 					pathfind(2);
 				} break;		
-			case(230):add_block_to_list(1, get<1>(red_target_list[0]), get<2>(red_target_list[0]), true);		//red robot has found a green block, add it to green list
+			case(230):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), true);		//red robot has found a green block, add it to green list
 				if (green_robot_waiting) {
 					pathfind(1);				
 				}break;		

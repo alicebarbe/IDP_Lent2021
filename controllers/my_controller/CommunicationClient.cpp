@@ -81,8 +81,8 @@ void sendFinishedScan(int robotIdentifier, Emitter* emitter) {
 	emitData(emitter, (const void*)&locationMessage, 20);
 }
 
-void sendBlockColour(int robotIdentifier, Emitter* emitter, int colour) {
-	const message blockColourMessage(robotIdentifier * 100 + (colour+2)*10, 0, 0);
+void sendBlockColour(int robotIdentifier, Emitter* emitter, int colour, coordinate newBlockPosition) {
+	const message blockColourMessage(robotIdentifier * 100 + (colour+2)*10, newBlockPosition.x, newBlockPosition.z);
 	emitData(emitter, (const void*)&blockColourMessage, 20);
 }
 
