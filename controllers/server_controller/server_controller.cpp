@@ -237,14 +237,12 @@ void tell_robot_go_home(int robot_identifier) {
 		message go_home_message{};
 		go_home_message = { 190, 0.004, -0.47 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20); 
-		green_robot_waiting = 1;
 	}
 	else if (robot_identifier == 2)
 	{
 		message go_home_message{};
 		go_home_message = { 290, -0.004, 0.47 };														//send next target green home
 		emitData(emitter, (const void*)&go_home_message, 20);
-		red_robot_waiting = 1;
 	}
 }
 
