@@ -186,7 +186,6 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax;
         }
     }
-    */
     
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.01) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
@@ -313,14 +312,17 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             }
             blocks_collected +=1;
             cout << "I am  " << robotColour << "I think I have  " << blocks_collected << "  blocks" << endl;
-            sendBlockColour(robotColour, emitter, robotColour);
+            sendBlockColour(robotColour, emitter, robotColour, coordinate(0, 0));
             break;
         }
         else if (checkColour(colourSensor) != 0) {
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(-0.2, emergencyFunc);
-            sendBlockColour(robotColour, emitter, (3 - robotColour));
+            double bearing = getCompassBearing(getDirection(compass));
+            coordinate robotPos(getLocation(gps));
+            coordinate newBlockPos = getBlockPositionInGrabber(robotPos, bearing);
+            sendBlockColour(robotColour, emitter, (3 - robotColour), newBlockPos);
             break;
         }
         else {
