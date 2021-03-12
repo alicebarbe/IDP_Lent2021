@@ -44,7 +44,8 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
 void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void sendBlockPositions(vector<coordinate> blockPositions);
-bool confirmBlockPosition(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+bool confirmBlockPosition();
+bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void handleBlockLost();
 
 int robotColour;
@@ -173,6 +174,7 @@ bool emergencyChecker(void* emergencyParams) {
         cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
     }*/
     
+    /*
     if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.5) {
         cout << robotColour << ": I'm going to get run over!" << endl;
         if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
@@ -184,6 +186,7 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax;
         }
     }
+    */
     
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.35) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
@@ -377,7 +380,6 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
   updateTargetPosition(nextTarget);
   bool hasConfirmedBlock = false;
   bool blockLost = false;
-  const double searchAngle = 5;
 
   while (robot->step(timeStep) != -1) {
     const double* bearing = getDirection(compass);
@@ -390,22 +392,22 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
       return false;
     }
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
-      blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
+      blockLost = !confirmBlockPosition();
       if (blockLost) {
-        for (int i = -searchAngle; i < searchAngle; i++) {
-          turnToBearing(constrainBearing(getCompassBearing(bearing) + i), emergencyFunc, emergencyParams);
-          blockLost = !confirmBlockPosition(emergencyFunc, emergencyParams);
-          cout << "angle is " << i << endl;
-          if (!blockLost) {
-            break;
-          }
+        coordinate relocatedTarget;
+        if (relocateBlock(relocatedTarget, emergencyFunc, emergencyParams)) {
+          updateTargetPosition(relocatedTarget);
+          blockLost = false;
         }
       }
       hasConfirmedBlock = true;
     }
     if (canUseDistanceSensor() && positionIsBlock) {
       double distance = getDistanceMeasurement(ds1);
-      tweakTargetDistanceFromMeasurement(robotPos, bearing, distance);
+      if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.1)) {
+        cout << "block lost during tweaking" << endl;
+        blockLost = true;
+      }
     }
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
@@ -428,7 +430,7 @@ void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergency
     setMotorVelocity(motors, motorSpeeds);
 
     if (hasReachedTargetBearing()) {
-      cout << "reached starting position" << endl;
+      cout << "reached bearing" << endl;
       break;
     }
     if (emergencyChecker(emergencyParams)) {
@@ -450,35 +452,41 @@ void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyPar
   }
 }
 
-bool confirmBlockPosition(bool (*emergencyFunc)(void*), void* emergencyParams) {
+bool confirmBlockPosition() {
   const double confirmBlockTolerance = 0.1;   // confirms blocks if they are within this distance of where we expect them to be
-  const double wallSeparationThresh = 0.08;   // detect blocks if they are this far from the wall
   const double* bearingVector = getDirection(compass);
-  double bearing = getCompassBearing(bearingVector);
   coordinate robotPos = getLocation(gps);
   double distance = getDistanceMeasurement(ds1);
   double expectedDistance = getExpectedDistanceOfBlock(robotPos, bearingVector);
 
   if (abs(distance - expectedDistance) > confirmBlockTolerance) {
-    if (abs(distance - getWallDistance(robotPos, bearing)) > wallSeparationThresh) {
-      cout << distance << "  " << expectedDistance << endl;
-      cout << "Attempting to relocate block" << endl;
-      // the block is here, but just at the wrong distance so we update the position and proceed (the block was found)
-      coordinate newBlockPos = getBlockPositionFromAngleAndDistance(robotPos, distance, bearing);
-      cout << "BlockPosition: " << newBlockPos << endl;
-      coordinate nextTarget = getPositionAroundBlock(newBlockPos, robotPos, frontOfRobotDisplacement);
-      cout << "NextTarget: " << nextTarget << endl;
-      updateTargetPosition(nextTarget);
-      return true;
-    }
-
     cout << robotColour << " lost a block!" << endl;
     return false;
   }
-  if (emergencyFunc(emergencyParams)) {
-
-  }
   return true;
+}
+
+bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* emergencyParams) {
+  double startBearing = getCompassBearing(getDirection(compass));
+  const double searchAngle = 3;
+  const double wallSeparationThresh = 0.03;
+
+  for (int i = -searchAngle; i < searchAngle; i++) {
+    turnToBearing(constrainBearing(startBearing + i), emergencyFunc, emergencyParams);
+
+    double bearing = getCompassBearing(getDirection(compass));
+    coordinate robotPos = getLocation(gps);
+    double distance = getDistanceMeasurement(ds1);
+    if (getWallDistance(robotPos, bearing) - distance > wallSeparationThresh) {
+      // the block is here, but just at the wrong distance so we update the position and proceed (the block was found)
+      cout << "Attempting to relocate block" << endl;
+      coordinate newBlockPos = getBlockPositionFromAngleAndDistance(robotPos, distance, bearing);
+      nextTarget = getPositionAroundBlock(newBlockPos, robotPos, frontOfRobotDisplacement);
+      cout << "NextTarget: " << nextTarget << endl;
+      return true;
+    }
+  }
+  return false;
 }
 
 void handleBlockLost() {

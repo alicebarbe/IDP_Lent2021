@@ -20,7 +20,7 @@ struct PIDState {
 void updateTargetPosition(coordinate newTarget, bool reverse = false);
 void updateTargetBearing(double newBearing);
 void updateTargetDistance(coordinate newTarget, bool reverse = true);
-void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance);
+bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance, double lostThreshold);
 
 // flag retrieval functions used to monitor control behavior
 bool hasReachedPosition();
