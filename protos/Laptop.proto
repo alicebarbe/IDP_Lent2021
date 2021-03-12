@@ -7,12 +7,15 @@ PROTO Laptop [
   field SFVec3f    translation 0 0 0
   field SFRotation rotation    0 1 0 0
   field SFString   name        "laptop"
+  field SFString    controller "server_controller"
+  field SFBool      supervisor  FALSE
   ]
 {
   Robot {
     translation IS translation
     rotation IS rotation
     supervisor IS supervisor
+    controller IS controller
     children [
       HingeJoint {
         jointParameters HingeJointParameters {
@@ -173,6 +176,5 @@ PROTO Laptop [
     physics Physics {
       density 1200
     }
-   controller "server_controller"
   }
 }

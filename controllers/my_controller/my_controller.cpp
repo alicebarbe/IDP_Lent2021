@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
       coordinate blockPosition;
 
       if (floor(get<0>(*receivedData) / 100) == robotColour) {
-        cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
+        // cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
           turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
@@ -174,7 +174,7 @@ bool emergencyChecker(void* emergencyParams) {
         cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
     }*/
     
-    /*
+    
     if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.5) {
         cout << robotColour << ": I'm going to get run over!" << endl;
         if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
@@ -186,8 +186,6 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax;
         }
     }
-    */
-    
     
     if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.35) {
         cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
@@ -199,7 +197,7 @@ bool emergencyChecker(void* emergencyParams) {
             emergencyCounter = emergencyCounterMax; // go straight back to checking if personal space is still violated
         }
     }
-    */
+    
 
     // make green robot turn away if red robot is going to run it over
     //cout << robotColour << " is headed to " << currentDestination.x << " " << currentDestination.z << endl;
