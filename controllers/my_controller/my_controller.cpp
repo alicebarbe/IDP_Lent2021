@@ -108,7 +108,8 @@ int main(int argc, char** argv) {
             cout << "I am " << robotColour << " and I am going home" << endl;
             currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
             //TO-DO: change the below to currentDestination instead?
-            moveToPosition(coordinate(get<1>(*receivedData), get<2>(*receivedData)), false, emergencyChecker); 
+            moveToPosition(currentDestination, false, emergencyChecker); 
+            moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
             break;
         case(99):
           cout << "something bad has happened";
@@ -340,29 +341,30 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
 
 
 void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams) {
-  const double* bearing = getDirection(compass);
-  coordinate bearingVector(-bearing[0], bearing[2]); // I dont like using the coordinate as a vector
-  coordinate targetPosition = coordinate(getLocation(gps)) + bearingVector * distance;
-  if (targetPosition.x > 1.13) { targetPosition.x = 1.13; }
-  if (targetPosition.z > 1.13) { targetPosition.z = 1.13; }
-  updateTargetDistance(targetPosition);
+    const double* bearing = getDirection(compass);
+    coordinate bearingVector(-bearing[0], bearing[2]); // I dont like using the coordinate as a vector
+    coordinate targetPosition = coordinate(getLocation(gps)) + bearingVector * distance;
+    if (targetPosition.x > 1.13) { targetPosition.x = 1.13; }
+    if (targetPosition.z > 1.13) { targetPosition.z = 1.13; }
+    updateTargetDistance(targetPosition);
 
-  while (robot->step(timeStep) != -1) {
-    bearing = getDirection(compass);
-    coordinate robotPos = getLocation(gps);
+    while (robot->step(timeStep) != -1) {
+        bearing = getDirection(compass);
+        coordinate robotPos = getLocation(gps);
 
-    tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
-    setMotorVelocity(motors, motor_speeds);
+        tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
+        setMotorVelocity(motors, motor_speeds);
 
-    if (hasReachedPosition()) {
-      setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
-      //cout << "Arrived" << endl;
-      break;
+        if (hasReachedPosition()) {
+            setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+            //cout << "Arrived" << endl;
+            break;
+        }
+        if (emergencyChecker(emergencyParams)) {
+            break;
+        };
+
     }
-    if (emergencyChecker(emergencyParams)) {
-      break;
-    };
-  }
 }
 
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams) {
