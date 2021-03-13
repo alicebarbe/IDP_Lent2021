@@ -222,6 +222,28 @@ double getExpectedDistanceOfBlock(coordinate robotPosition, const double* curren
   return displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
 }
 
+coordinate getPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset) {
+  coordinate pointAwayFromWall = blockPos;
+
+  if (ARENA_X_MAX - blockPos.x < distanceFromWallThresh) {
+    // North wall
+    pointAwayFromWall.x = ARENA_X_MAX - targetOffset;
+  }
+  else if (blockPos.x - ARENA_X_MIN < distanceFromWallThresh) {
+    // South wall
+    pointAwayFromWall.x = ARENA_X_MIN + targetOffset;
+  }
+  else if (blockPos.z - ARENA_Z_MIN < distanceFromWallThresh) {
+    // West wall
+    pointAwayFromWall.z = ARENA_Z_MIN + targetOffset;
+  }
+  else if (ARENA_Z_MAX - blockPos.z < distanceFromWallThresh) {
+    // East wall
+    pointAwayFromWall.z = ARENA_Z_MAX - targetOffset;
+  }
+  return pointAwayFromWall;
+}
+
 coordinate getTargetPosition() {
   return targetPosition;
 }

@@ -69,6 +69,8 @@ int emergencyCounterMax = 50; // get position every this many iterations
 coordinate currentDestination; // where we're headed
 coordinate otherRobotDestination; // where the other robot is headed
 
+bool waitingForResponse = true;
+
 int main(int argc, char** argv) {
   // get the time step of the current world.
   
@@ -81,6 +83,10 @@ int main(int argc, char** argv) {
   sendRobotLocation(gps, robotColour, emitter);
 
   while (robot->step(timeStep) != -1) {
+    if (!waitingForResponse) {
+      //we arent receiving anything from the server, so send a message
+
+    }
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       vector<coordinate> targetPoints;
@@ -99,7 +105,7 @@ int main(int argc, char** argv) {
         case(00):
           blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           currentDestination = blockPosition;
-          if (abs(blockPosition.x) > 1.0 || abs(blockPosition.z) > 1.0) { moveToPosition(coordinate((blockPosition.x*0.6), (blockPosition.z*0.6 )), false, emergencyChecker); }
+          if (abs(blockPosition.x) > 1.0 || abs(blockPosition.z) > 1.0) { moveToPosition(getPointAwayFromWall(blockPosition, 0.15, 0.35), false, emergencyChecker); }
           if (moveToPosition(blockPosition, true, emergencyChecker)) {
             dealwithblock(emergencyChecker);
           }
@@ -109,7 +115,7 @@ int main(int argc, char** argv) {
             currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
             //TO-DO: change the below to currentDestination instead?
             moveToPosition(currentDestination, false, emergencyChecker); 
-            moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
+            // moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
             break;
         case(99):
           cout << "something bad has happened";
@@ -375,7 +381,12 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (blockPosition.x > 1.13)blockPosition.x = 1.13;
     if (blockPosition.z > 1.13)blockPosition.z = 1.13;
   coordinate robotPos = getLocation(gps);
-  coordinate nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
+  coordinate nextTarget = blockPosition;
+  cout << positionIsBlock << endl;
+  if (positionIsBlock) {
+    nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
+  }
+  cout << nextTarget << endl;
   updateTargetPosition(nextTarget);
   bool hasConfirmedBlock = false;
   bool blockLost = false;
