@@ -51,6 +51,8 @@ bool green_scan_complete = false;
 bool red_scan_complete = false;
 bool green_robot_waiting = false;
 bool red_robot_waiting = false;
+bool green_robot_complete = false;
+bool red_robot_complete = false;
 char green_blocks_collected = 0;
 char red_blocks_collected = 0;
 
@@ -129,11 +131,11 @@ int main(int argc, char** argv) {
 					tell_robot_go_home(2);
 					break;
 				}
-																						//red robot has dealt with its block, remove it from its list and tell it where to go next
+																					//red robot has dealt with its block, remove it from its list and tell it where to go next
 			}
 			if (red_robot_waiting && green_robot_waiting) {
-				tell_robot_go_home(1);
-				tell_robot_go_home(2);
+				//tell_robot_go_home(1)
+				//tell_robot_go_home(2)
 			}
 		}
 		

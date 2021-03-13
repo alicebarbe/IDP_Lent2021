@@ -294,18 +294,22 @@ vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyPa
 
 void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
     static int blocks_collected = 0;
-    const double distanceToFloorThresh = 0.06;
+    const double distanceToFloorThresh = 0.08;
     for (char i = 0; i < 4; i++) {
     closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
     openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);    
         if (checkColour(colourSensor) == robotColour) {
-            moveForward(-0.2, emergencyFunc, emergencyParams);
+            moveForward(-eatBlockDistance - 0.05, emergencyFunc, emergencyParams);
             openGripper(gripperservo); openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
             if (blocks_collected < 3) {
                 closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
+                cout << getDistanceMeasurement(ds1) << endl;
                 if (getDistanceMeasurement(ds1) <= distanceToFloorThresh) {
-                    continue;                
+                    cout << "I am " << robotColour << " and i have choked" << endl;
+                    openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
+                    moveForward(0.05, emergencyFunc, emergencyParams);
+                    closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
                 }
             }
             else { 
