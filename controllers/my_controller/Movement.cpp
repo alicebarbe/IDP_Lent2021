@@ -20,6 +20,9 @@ const double turnOnlyThresh = 2;  // if more than this many degrees from the cor
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
 const double endMoveThresh = 0.00025; // (m^2) If less than the root of this distance away from the target dont move any more
 const double distanceMeasurementWeight = 0.5;  // how much weight to give new distance sensor measurements when recalculating block position
+const int stuckCyclesThresh = 300;  // (timesteps) how long do you have to be in the same position while trying to move to be stuck
+const double stuckDistanceThresh = 0.01; // (m) If within this distance for stuckTimeThresh while trying to move updateCheckIfStuck returns true
+const double stuckBearingThresh = 3; // (degrees) If within this angle for stuckTimeThresh while trying to move updateCheckIfStuck returns true
 
 PIDState RotationalPIDState{ 0, 0 };
 
@@ -37,9 +40,15 @@ bool maintainingBearing = false;
 double targetBearing; 
 bool reachedBearing = false;
 
+coordinate lastUnstuckPosition;
+double lastUnstuckBearing;
+int cyclesStuckFor = 0;
+
 void updateTargetBearing(double newBearing) {
   targetBearing = newBearing;
   reachedBearing = false;
+
+  cyclesStuckFor = 0;
 }
 
 void updateTargetPosition(coordinate newTarget, bool reverse) {
@@ -53,6 +62,8 @@ void updateTargetPosition(coordinate newTarget, bool reverse) {
 
   ForwardPIDState = PIDState{ 0, 0 };
   RotationalPIDState = PIDState{ 0, 0 };
+
+  cyclesStuckFor = 0;
 }
 
 void updateTargetDistance(coordinate newTarget, bool reverse) {
@@ -66,6 +77,8 @@ void updateTargetDistance(coordinate newTarget, bool reverse) {
 
   ForwardPIDState = PIDState{ 0, 0 };
   RotationalPIDState = PIDState{ 0, 0 };
+
+  cyclesStuckFor = 0;
 }
 
 bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance, double lostThreshold) {
@@ -147,6 +160,24 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
   double left_motor_speed = clamp(forward_speed + turning_speed, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
   double right_motor_speed = clamp(forward_speed - turning_speed, -MOTOR_MAX_SPEED, MOTOR_MAX_SPEED);
   return tuple<double, double>(left_motor_speed, right_motor_speed);
+}
+
+bool updateCheckIfStuck(coordinate currentPosition, double currentBearing) {
+  if (distanceBetweenPoints(currentPosition, lastUnstuckPosition) > stuckDistanceThresh || 
+    abs(getBearingDifference(currentBearing, lastUnstuckBearing)) > stuckBearingThresh) {
+    lastUnstuckPosition = currentPosition;
+    lastUnstuckBearing = currentBearing;
+    cyclesStuckFor = 0;
+    return false;
+  }
+  else {
+    cyclesStuckFor += 1;
+    if (cyclesStuckFor >= stuckCyclesThresh) {
+      cout << cyclesStuckFor << "   " << stuckCyclesThresh << endl;
+      return true;
+    }
+  }
+  return false;
 }
 
 double getBearingCorrection(double bearing, double currentBearing) {

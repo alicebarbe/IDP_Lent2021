@@ -32,6 +32,7 @@ bool isMaintainingTargetBearing();
 // Control loop functions to be called in a main loop
 std::tuple<double, double> updateRotationControlLoop(const double* currentBearingVector);
 std::tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, const double* currentBearingVector);
+bool updateCheckIfStuck(coordinate currentPosition, double currentBearing);
 double getBearingCorrection(double bearing, double currentBearing);
 
 // Positioning functions - these should probably go elsewhere

@@ -41,6 +41,7 @@ void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
+void wiggleBackwardsForwards(int numWiggles, int wiggleDuration, bool (*emergencyFunc)(void*), void* emergencyParams);
 void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void sendBlockPositions(vector<coordinate> blockPositions);
@@ -363,14 +364,18 @@ void moveForward(double distance, bool (*emergencyFunc)(void*), void* emergencyP
         }
         if (emergencyChecker(emergencyParams)) {
             break;
-        };
-
+        }
+        if (updateCheckIfStuck(robotPos, getCompassBearing(bearing))) {
+          cout << "stuck!" << endl;
+          wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+          updateTargetDistance(targetPosition);
+        }
     }
 }
 
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams) {
-    if (blockPosition.x > 1.13)blockPosition.x = 1.13;
-    if (blockPosition.z > 1.13)blockPosition.z = 1.13;
+  if (blockPosition.x > 1.13) blockPosition.x = 1.13;
+  if (blockPosition.z > 1.13) blockPosition.z = 1.13;
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = getPositionAroundBlock(blockPosition, robotPos, frontOfRobotDisplacement);
   updateTargetPosition(nextTarget);
@@ -390,9 +395,8 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
       blockLost = !confirmBlockPosition();
       if (blockLost) {
-        coordinate relocatedTarget;
-        if (relocateBlock(relocatedTarget, emergencyFunc, emergencyParams)) {
-          updateTargetPosition(relocatedTarget);
+        if (relocateBlock(nextTarget, emergencyFunc, emergencyParams)) {
+          updateTargetPosition(nextTarget);
           blockLost = false;
         }
       }
@@ -413,6 +417,11 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
       handleBlockLost();
       return false;
     }
+    if (updateCheckIfStuck(robotPos, getCompassBearing(bearing))) {
+      cout << "stuck!" << endl;
+      wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+      updateTargetPosition(nextTarget);
+    }
   }
 }
 
@@ -431,9 +440,24 @@ void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergency
     }
     if (emergencyChecker(emergencyParams)) {
       break;
-    };
+    }
+    if (updateCheckIfStuck(coordinate(0,0), getCompassBearing(bearingVector))) {
+      cout << "stuck!" << endl;
+      wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+      updateTargetBearing(bearing);
+    }
   }
 }
+
+void wiggleBackwardsForwards(int numWiggles, int wiggleDuration, bool (*emergencyFunc)(void*), void* emergencyParams) {
+  for (int i = 0; i < numWiggles; i++) {
+    setMotorVelocity(motors, tuple<double, double>(MOTOR_MAX_SPEED, MOTOR_MAX_SPEED));
+    timeDelay(wiggleDuration, emergencyFunc, emergencyParams);
+    setMotorVelocity(motors, tuple<double, double>(-MOTOR_MAX_SPEED, -MOTOR_MAX_SPEED));
+    timeDelay(wiggleDuration, emergencyFunc, emergencyParams);
+  }
+}
+
 
 void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyParams) {
   int j = 0;
