@@ -20,7 +20,7 @@ struct PIDState {
 void updateTargetPosition(coordinate newTarget, bool reverse = false);
 void updateTargetBearing(double newBearing);
 void updateTargetDistance(coordinate newTarget, bool reverse = true);
-void tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance);
+bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance, double lostThreshold);
 
 // flag retrieval functions used to monitor control behavior
 bool hasReachedPosition();
@@ -41,3 +41,4 @@ coordinate getBlockPosition(std::tuple<double, double> afterLastJump, std::tuple
 coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double blockAvgDistance, double blockAvgAngle);
 double getWallDistance(const coordinate robotPos, double angle);
 double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector);
+coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing);
