@@ -83,11 +83,11 @@ int main(int argc, char** argv) {
 			case(225):red_destination = coordinate(get<1>(*received_data), get<2>(*received_data)); break;
 			
 			case(130):green_blocks_collected++;  break;															//green robot has found a green block, Good!
-			case(140):add_block_to_list(2, get<1>(*received_data), get<2>(*received_data), true);	//green robot has found a red block, add it to red list
+			case(140):add_block_to_list(2, get<1>(green_target_list[0]), get<2>(green_target_list[0]), true);	//green robot has found a red block, add it to red list
 				if (red_robot_waiting) {
 					pathfind(2);
 				} break;		
-			case(230):add_block_to_list(1, get<1>(*received_data), get<2>(*received_data), true);		//red robot has found a green block, add it to green list
+			case(230):add_block_to_list(1, get<1>(red_target_list[0]), get<2>(red_target_list[0]), true);		//red robot has found a green block, add it to green list
 				if (green_robot_waiting) {
 					pathfind(1);				
 				}break;		
@@ -101,31 +101,47 @@ int main(int argc, char** argv) {
 						red_target_list.push_back((distance_and_coordinate)green_target_list[0]);
 						green_target_list.erase(green_target_list.begin());
 					}
-					if (red_robot_waiting)pathfind(2);
+					if (red_robot_waiting && red_target_list.size())
+					{
+						pathfind(2);
+						red_robot_waiting = false;
+					}
 					tell_robot_go_home(1);
 					green_robot_waiting = false;
 					break;
 				}									//if we have all blocks, go home
-				if (green_target_list.size() != 0) { pathfind(1); break; }																			//green robot has dealt with its block, remove it from its list and tell it where to go next
+				if (green_target_list.size() != 0) {
+					green_robot_waiting = false;
+					pathfind(1); 
+					break;
+				}																			//green robot has dealt with its block, remove it from its list and tell it where to go next
 				else {
 					green_robot_waiting = true;
 					tell_robot_go_home(1);
 					break;
 				}
-			case(270):red_target_list.erase(red_target_list.begin());
-				if (red_blocks_collected == 4) { 
-					while (red_target_list.size())
+			case(270):red_target_list.erase(red_target_list.begin());			//red has dealt with a block, remove it from the red list
+				if (red_blocks_collected == 4) {								//if red has all of its blocks
+					while (red_target_list.size())										//add all remaining blocks on the red list to the green list
 					{
 						green_target_list.push_back((distance_and_coordinate)red_target_list[0]);
 						red_target_list.erase(red_target_list.begin());
 					}
-					if (green_robot_waiting)pathfind(1);
-					tell_robot_go_home(2); 
+					if (green_robot_waiting && green_target_list.size()) {									//if the green robot is currenlty not dealing with a block
+						pathfind(1);											//find the next target location for green and send it
+						green_robot_waiting = false;							//set it so green is now dealing with a block
+					}
+					tell_robot_go_home(2);										//red go home and stay there as we have all of your blocks
 					red_robot_waiting = false;
-					break; }
-				if (red_target_list.size() != 0) { pathfind(2); break; }
+					break; 
+				}
+				if (red_target_list.size() != 0) {								//if red deosn't have all of it's blocks
+					red_robot_waiting = false;
+					pathfind(2);												//send it its next target
+					break;
+				}
 				else {
-					red_robot_waiting = true;
+					red_robot_waiting = true;									
 					tell_robot_go_home(2);
 					break;
 				}

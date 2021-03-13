@@ -331,7 +331,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             closeTrapDoor(trapdoorservo);
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(-0.1, emergencyFunc, emergencyParams);
-            moveForward(0.1, emergencyFunc, emergencyParams);
+            moveForward(0.11, emergencyFunc, emergencyParams);
         }
     }
     sendRobotLocation(gps, robotColour, emitter);
