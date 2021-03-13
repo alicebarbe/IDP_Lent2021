@@ -14,7 +14,7 @@
 using namespace std;
 using namespace webots;
 
-const PIDGains RotationalPIDGains{ 5, 0, 0.01, 0.1, 10};
+const PIDGains RotationalPIDGains{ 5, 0, 0.01, 0.5, 10};
 const double endTurnThresh = 0.1;  // raise reached rotation flag when less than 0.1 degrees from the target rotation
 const double turnOnlyThresh = 2;  // if more than this many degrees from the correct heading dont move forwards
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
