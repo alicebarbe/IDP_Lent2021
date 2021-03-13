@@ -23,7 +23,7 @@ const double distanceMeasurementWeight = 0.5;  // how much weight to give new di
 
 PIDState RotationalPIDState{ 0, 0 };
 
-const PIDGains ForwardPIDGains{ 1000, 0.1, 0, 0, 0.01};
+const PIDGains ForwardPIDGains{ 1000, 0.1, 0, 0, 0.05};
 PIDState ForwardPIDState{ 0, 0 };
 
 coordinate targetPosition;
@@ -139,6 +139,7 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
       turningStage = false;
     }
     if (forwardStage && abs(distance_to_target) < endMoveThresh) {
+      cout << "finished motion" << endl;
       forwardStage = false;
       reachedPosition = true;
     }
