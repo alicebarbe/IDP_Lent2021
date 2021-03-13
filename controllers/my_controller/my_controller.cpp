@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
             //TO-DO: change the below to currentDestination instead?
             moveToPosition(currentDestination, false, emergencyChecker); 
             moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
+            sendDealtwithBlock(robotColour, emitter);
             break;
         case(99):
           cout << "something bad has happened";
