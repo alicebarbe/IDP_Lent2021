@@ -69,8 +69,6 @@ int emergencyCounterMax = 50; // get position every this many iterations
 coordinate currentDestination; // where we're headed
 coordinate otherRobotDestination; // where the other robot is headed
 
-bool waitingForResponse = true;
-
 int main(int argc, char** argv) {
   // get the time step of the current world.
   
@@ -83,10 +81,6 @@ int main(int argc, char** argv) {
   sendRobotLocation(gps, robotColour, emitter);
 
   while (robot->step(timeStep) != -1) {
-    if (!waitingForResponse) {
-      //we arent receiving anything from the server, so send a message
-
-    }
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       vector<coordinate> targetPoints;
@@ -116,6 +110,7 @@ int main(int argc, char** argv) {
             //TO-DO: change the below to currentDestination instead?
             moveToPosition(currentDestination, false, emergencyChecker); 
             // moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
+            sendDealtwithBlock(robotColour, emitter);
             break;
         case(99):
           cout << "something bad has happened";
@@ -343,7 +338,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             break;
         }
         else {
-            cout << "I am " << robotColour << "  I can't detect Colour "  << i << endl;
+            cout << "I am " << robotColour << "  I can't detect Colour" << endl;
             closeTrapDoor(trapdoorservo);
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(-0.1, emergencyFunc, emergencyParams);
@@ -424,7 +419,6 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     }
     if (canUseDistanceSensor() && positionIsBlock) {
       double distance = getDistanceMeasurement(ds1);
-      cout << "I am " << robotColour << "  Tweaking with distance " << distance << endl;
       if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
         cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
         blockLost = true;
