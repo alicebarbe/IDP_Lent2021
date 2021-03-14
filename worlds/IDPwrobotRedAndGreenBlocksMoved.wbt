@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.4604485270971699 -0.740506748932272 -0.4895272297633746 2.049392426427209
-  position -0.7318489071437215 2.993496662222734 -0.1757123860518654
+  orientation -0.31141695097614563 -0.8208562370624831 -0.4787635331981138 2.2892544016394973
+  position -1.928551847480381 4.433391604628732 -1.2516921723552006
 }
 Background {
   skyColor [
@@ -36,38 +36,38 @@ ChangeLDRDesign {
   rotation 0.5773509358554485 0.5773509358554485 0.5773489358556708 -2.094395307179586
 }
 target {
-  translation -0.299 0.05 0.42
+  translation -0.549 0.05 0.42
   name "target(9)"
 }
 target {
-  translation 0.977 0.05 0.6057
+  translation 0.497 0.05 0.1757
   name "target(8)"
 }
 target {
-  translation -0.1533 0.05 0.8014
+  translation -0.3433 0.05 0.8014
   name "target(7)"
 }
 target {
-  translation 1.0798 0.05 -0.2533
+  translation -0.6302 0.05 -0.3933
   name "target(6)"
 }
 target {
-  translation 0.366 0.05 -0.3246
+  translation 0.366 0.05 -0.6846
   colour 0 1 0
   name "target(5)"
 }
 target {
-  translation -1.0911 0.05 -0.7727
+  translation -0.9611 0.05 -0.0927
   colour 0 1 0
   name "target(1)"
 }
 target {
-  translation 0.8205 0.05 -0.0458
+  translation 0.8605 0.05 0.0442
   colour 0 1 0
   name "target(2)"
 }
 target {
-  translation 1.0199 0.05 -1.1002
+  translation 0.6499 0.05 -1.0402
   colour 0 1 0
   name "target(3)"
 }

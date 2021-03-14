@@ -18,7 +18,7 @@ void openGripper(Motor* gripper) {
 }
 
 void closeGripper(Motor* gripper) {
-	gripper->setPosition(-3.1415925);
+	gripper->setPosition(-2.8);
 }
 
 void openTrapDoor(Motor* trapdoor) {

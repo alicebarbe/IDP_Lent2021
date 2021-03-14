@@ -14,7 +14,7 @@
 using namespace std;
 using namespace webots;
 
-const PIDGains RotationalPIDGains{ 5, 0, 0.01, 0.1, 10};
+const PIDGains RotationalPIDGains{ 5, 0, 0.01, 0.5, 10};
 const double endTurnThresh = 0.1;  // raise reached rotation flag when less than 0.1 degrees from the target rotation
 const double turnOnlyThresh = 2;  // if more than this many degrees from the correct heading dont move forwards
 const double noTurnThresh = 0.025;  // (m^2) If less than the root of this distance away from the target dont aapply rotation corrections any more
@@ -26,7 +26,7 @@ const double stuckBearingThresh = 3; // (degrees) If within this angle for stuck
 
 PIDState RotationalPIDState{ 0, 0 };
 
-const PIDGains ForwardPIDGains{ 1000, 0.1, 0, 0, 0.01};
+const PIDGains ForwardPIDGains{ 1000, 0.1, 0, 0, 0.05};
 PIDState ForwardPIDState{ 0, 0 };
 
 coordinate targetPosition;
@@ -52,7 +52,7 @@ void updateTargetBearing(double newBearing) {
 }
 
 void updateTargetPosition(coordinate newTarget, bool reverse) {
-  targetPosition = newTarget;
+  targetPosition = get<1>(offsetPointAwayFromWall(newTarget, closestDistanceBlockFromWall, closestDistanceBlockFromWall));
   turningStage = true;
   forwardStage = false;
   reachedPosition = false;
@@ -67,7 +67,7 @@ void updateTargetPosition(coordinate newTarget, bool reverse) {
 }
 
 void updateTargetDistance(coordinate newTarget, bool reverse) {
-  targetPosition = newTarget;
+  targetPosition = get<1>(offsetPointAwayFromWall(newTarget, closestDistanceBlockFromWall, closestDistanceBlockFromWall));
   turningStage = false; // disable rotation, so only move forwards
   forwardStage = true;
   reachedPosition = false;
@@ -227,10 +227,10 @@ coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double
   return coordinate(block_x, block_z);
 }
 
-double getWallDistance(const coordinate robotPos, double angle) {
+double getWallDistance(const coordinate robotPos, double angle, coordinate sensorDisp) {
   double boundXPos, boundXNeg, boundZPos, boundZNeg;
   double radAngle = angle * DEG_TO_RAD;
-  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, angle);
+  coordinate rotatedSensorDisp = rotateVector(sensorDisp, angle);
 
   boundXPos = (ARENA_X_MAX - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
   boundXNeg = (ARENA_X_MIN - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
@@ -239,6 +239,12 @@ double getWallDistance(const coordinate robotPos, double angle) {
   boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+}
+
+double getWallCollisionDistance(const coordinate robotPos, double angle) {
+  // note we have to generate a coordinate from the const coordinate in order to add/subtract
+  return min(getWallDistance(robotPos, angle, coordinate(distanceSensorDisplacement) + rightMostPointDispacement), 
+    getWallDistance(robotPos, angle, coordinate(distanceSensorDisplacement) - rightMostPointDispacement));
 }
 
 coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing) {
@@ -251,6 +257,33 @@ double getExpectedDistanceOfBlock(coordinate robotPosition, const double* curren
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
   return displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
+}
+
+tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset) {
+  coordinate offsetPoint = blockPos;
+  bool isViaPoint = false;
+
+  if (ARENA_X_MAX - blockPos.x < distanceFromWallThresh) {
+    // North wall
+    offsetPoint.x = ARENA_X_MAX - targetOffset;
+    isViaPoint = true;
+  }
+  else if (blockPos.x - ARENA_X_MIN < distanceFromWallThresh) {
+    // South wall
+    offsetPoint.x = ARENA_X_MIN + targetOffset;
+    isViaPoint = true;
+  }
+  if (blockPos.z - ARENA_Z_MIN < distanceFromWallThresh) {
+    // West wall
+    offsetPoint.z = ARENA_Z_MIN + targetOffset;
+    isViaPoint = true;
+  }
+  else if (ARENA_Z_MAX - blockPos.z < distanceFromWallThresh) {
+    // East wall
+    offsetPoint.z = ARENA_Z_MAX - targetOffset;
+    isViaPoint = true;
+  }
+  return tuple<bool, coordinate>(isViaPoint, offsetPoint);
 }
 
 coordinate getTargetPosition() {
