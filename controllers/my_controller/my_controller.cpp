@@ -339,6 +339,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             blocks_collected +=1;
             cout << "I am  " << robotColour << "I think I have  " << blocks_collected << "  blocks" << endl;
             sendBlockColour(robotColour, emitter, robotColour, coordinate(0, 0));
+            sendDebugMessage(robotColour, emitter, 75);
             break;
         }
         else if (checkColour(colourSensor) != 0) {
@@ -349,6 +350,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             coordinate newBlockPos = getBlockPositionInGrabber(robotPos, bearing);
             sendBlockColour(robotColour, emitter, (3 - robotColour), newBlockPos);
             moveForward(-0.2, false, emergencyFunc);
+            sendDebugMessage(robotColour, emitter, 75);
             break;
         }
         else {
@@ -361,6 +363,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
               // at the last run dont move forward since the robot is moving on to the next block
               // note here we want to move to the (potentially shoved) block position so we pass true for positionIsBlock
               moveForward(0.1, true, emergencyFunc, emergencyParams);
+              sendDebugMessage(robotColour, emitter, 71);
             }
         }
     }
@@ -395,6 +398,7 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
           if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
             cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
             blockLost = true;
+            sendDebugMessage(robotColour, emitter, 72);
           }
         }
         if (emergencyChecker(emergencyParams)) {
@@ -402,8 +406,8 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
         }
         if (updateCheckIfStuck(robotPos, getCompassBearing(bearing))) {
           cout << "stuck!" << endl;
-          wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
-          updateTargetDistance(targetPosition);
+          //wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+          //updateTargetDistance(targetPosition);
         }
         if (blockLost) {
           handleBlockLost();
@@ -435,7 +439,9 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
       blockLost = !confirmBlockPosition();
       if (blockLost) {
+        sendDebugMessage(robotColour, emitter, 73);
         if (relocateBlock(nextTarget, emergencyFunc, emergencyParams)) {
+          sendDebugMessage(robotColour, emitter, 74);
           updateTargetPosition(nextTarget);
           blockLost = false;
         }
@@ -447,6 +453,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
       if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
         cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
         blockLost = true;
+        sendDebugMessage(robotColour, emitter, 72);
       }
     }
     if (hasReachedPosition()) {
@@ -459,8 +466,8 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     }
     if (updateCheckIfStuck(robotPos, getCompassBearing(bearing))) {
       cout << "stuck!" << endl;
-      wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
-      updateTargetPosition(nextTarget);
+      //wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+      //updateTargetPosition(nextTarget);
     }
   }
 }
@@ -482,8 +489,8 @@ void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergency
     }
     if (updateCheckIfStuck(coordinate(0,0), getCompassBearing(bearingVector))) {
       cout << "stuck!" << endl;
-      wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
-      updateTargetBearing(bearing);
+      //wiggleBackwardsForwards(3, 10, emergencyFunc, emergencyParams);
+      //updateTargetBearing(bearing);
     }
   }
 }
