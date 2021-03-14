@@ -43,5 +43,5 @@ coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double
 double getWallDistance(const coordinate robotPos, double angle, coordinate sensorDisp=distanceSensorDisplacement);
 double getWallCollisionDistance(const coordinate robotPos, double angle);
 double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector);
-coordinate getPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
+std::tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
 coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing);

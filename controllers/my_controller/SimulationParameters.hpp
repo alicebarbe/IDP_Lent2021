@@ -31,8 +31,10 @@ inline const double ARENA_Z_MIN = -1.2;  // m
 inline const int COMPARATOR_REF_RED = 420;  // 10 bit value
 inline const int COMPARATOR_REF_GREEN = 420;  // 10 bit value
 
-inline const coordinate frontOfRobotDisplacement(0.09, 0.015); // dont use this to tune movement - this must equal the displacement of a block in the grabber arm for positioning
+inline const coordinate frontOfRobotDisplacement(0.082, 0.015); // dont use this to tune movement - this must equal the displacement of a block in the grabber arm for positioning
 inline const coordinate distanceSensorDisplacement(0.082, 0.0);
 inline const coordinate rightMostPointDispacement(0.0, 0.123);  //A vector out from the GPS to the outer edge of the wheel
 inline const double eatBlockDistance = 0.16;
+inline const double closestDistanceBlockFromWall = 0.05;  // we dont attempt to go closer to the wall than this
+inline const double approachBlockPerpendicularFromWallDistance = 0.15;  //(m) approach blocks closer to the wall than this perpendicular to the wall
 

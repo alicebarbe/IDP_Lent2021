@@ -43,7 +43,7 @@ void updateTargetBearing(double newBearing) {
 }
 
 void updateTargetPosition(coordinate newTarget, bool reverse) {
-  targetPosition = newTarget;
+  targetPosition = get<1>(offsetPointAwayFromWall(newTarget, closestDistanceBlockFromWall, closestDistanceBlockFromWall));
   turningStage = true;
   forwardStage = false;
   reachedPosition = false;
@@ -56,7 +56,7 @@ void updateTargetPosition(coordinate newTarget, bool reverse) {
 }
 
 void updateTargetDistance(coordinate newTarget, bool reverse) {
-  targetPosition = newTarget;
+  targetPosition = get<1>(offsetPointAwayFromWall(newTarget, closestDistanceBlockFromWall, closestDistanceBlockFromWall));
   turningStage = false; // disable rotation, so only move forwards
   forwardStage = true;
   reachedPosition = false;
@@ -228,26 +228,31 @@ double getExpectedDistanceOfBlock(coordinate robotPosition, const double* curren
   return displacementFromDistanceSensor.x * -currentBearingVector[0] + displacementFromDistanceSensor.z * currentBearingVector[2];
 }
 
-coordinate getPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset) {
-  coordinate pointAwayFromWall = blockPos;
+tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset) {
+  coordinate offsetPoint = blockPos;
+  bool isViaPoint = false;
 
   if (ARENA_X_MAX - blockPos.x < distanceFromWallThresh) {
     // North wall
-    pointAwayFromWall.x = ARENA_X_MAX - targetOffset;
+    offsetPoint.x = ARENA_X_MAX - targetOffset;
+    isViaPoint = true;
   }
   else if (blockPos.x - ARENA_X_MIN < distanceFromWallThresh) {
     // South wall
-    pointAwayFromWall.x = ARENA_X_MIN + targetOffset;
+    offsetPoint.x = ARENA_X_MIN + targetOffset;
+    isViaPoint = true;
   }
-  else if (blockPos.z - ARENA_Z_MIN < distanceFromWallThresh) {
+  if (blockPos.z - ARENA_Z_MIN < distanceFromWallThresh) {
     // West wall
-    pointAwayFromWall.z = ARENA_Z_MIN + targetOffset;
+    offsetPoint.z = ARENA_Z_MIN + targetOffset;
+    isViaPoint = true;
   }
   else if (ARENA_Z_MAX - blockPos.z < distanceFromWallThresh) {
     // East wall
-    pointAwayFromWall.z = ARENA_Z_MAX - targetOffset;
+    offsetPoint.z = ARENA_Z_MAX - targetOffset;
+    isViaPoint = true;
   }
-  return pointAwayFromWall;
+  return tuple<bool, coordinate>(isViaPoint, offsetPoint);
 }
 
 coordinate getTargetPosition() {
