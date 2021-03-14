@@ -139,7 +139,6 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
       turningStage = false;
     }
     if (forwardStage && abs(distance_to_target) < endMoveThresh) {
-      cout << "finished motion" << endl;
       forwardStage = false;
       reachedPosition = true;
     }
@@ -197,10 +196,10 @@ coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double
   return coordinate(block_x, block_z);
 }
 
-double getWallDistance(const coordinate robotPos, double angle) {
+double getWallDistance(const coordinate robotPos, double angle, coordinate sensorDisp) {
   double boundXPos, boundXNeg, boundZPos, boundZNeg;
   double radAngle = angle * DEG_TO_RAD;
-  coordinate rotatedSensorDisp = rotateVector(distanceSensorDisplacement, angle);
+  coordinate rotatedSensorDisp = rotateVector(sensorDisp, angle);
 
   boundXPos = (ARENA_X_MAX - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
   boundXNeg = (ARENA_X_MIN - robotPos.x - rotatedSensorDisp.x) / cos(radAngle);
@@ -209,6 +208,12 @@ double getWallDistance(const coordinate robotPos, double angle) {
   boundZNeg = (ARENA_Z_MIN - robotPos.z - rotatedSensorDisp.z) / sin(radAngle);
 
   return min(max(boundXPos, boundXNeg), max(boundZNeg, boundZPos));
+}
+
+double getWallCollisionDistance(const coordinate robotPos, double angle) {
+  // note we have to generate a coordinate from the const coordinate in order to add/subtract
+  return min(getWallDistance(robotPos, angle, coordinate(distanceSensorDisplacement) + rightMostPointDispacement), 
+    getWallDistance(robotPos, angle, coordinate(distanceSensorDisplacement) - rightMostPointDispacement));
 }
 
 coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing) {

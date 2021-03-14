@@ -301,11 +301,17 @@ vector<coordinate> scanForBlocks(bool (*emergencyFunc)(void*), void* emergencyPa
 void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
     static int blocks_collected = 0;
     const double distanceToFloorThresh = 0.08;
+
+    coordinate robotPos = getLocation(gps);
+    double bearing = getCompassBearing(getDirection(compass));
+
     for (char i = 0; i < 4; i++) {
     closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
     openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);    
         if (checkColour(colourSensor) == robotColour) {
-            moveForward(-eatBlockDistance - 0.05, emergencyFunc, emergencyParams);
+            if (getWallCollisionDistance(robotPos, bearing) < eatBlockDistance + 0.05) {
+                moveForward(-eatBlockDistance - 0.05, emergencyFunc, emergencyParams);
+            }
             openGripper(gripperservo); openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
             if (blocks_collected < 3) {
@@ -337,11 +343,15 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             break;
         }
         else {
-            cout << "I am " << robotColour << "  I can't detect Colour" << endl;
+            cout << "I am " << robotColour << "  I can't detect Colour "  << i << endl;
             closeTrapDoor(trapdoorservo);
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(-0.1, emergencyFunc, emergencyParams);
-            moveForward(0.1, emergencyFunc, emergencyParams);
+            
+            if ((int) i < 3) {
+              // at the last run dont move forward since the robot is moving on to the next block
+              moveForward(0.1, emergencyFunc, emergencyParams);
+            }
         }
     }
     sendRobotLocation(gps, robotColour, emitter);
@@ -414,6 +424,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     }
     if (canUseDistanceSensor() && positionIsBlock) {
       double distance = getDistanceMeasurement(ds1);
+      cout << "I am " << robotColour << "  Tweaking with distance " << distance << endl;
       if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
         cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
         blockLost = true;

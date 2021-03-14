@@ -33,5 +33,6 @@ inline const int COMPARATOR_REF_GREEN = 500;  // 10 bit value
 
 inline const coordinate frontOfRobotDisplacement(0.09, 0.015); // dont use this to tune movement - this must equal the displacement of a block in the grabber arm for positioning
 inline const coordinate distanceSensorDisplacement(0.082, 0.0);
+inline const coordinate rightMostPointDispacement(0.0, 0.123);  //A vector out from the GPS to the outer edge of the wheel
 inline const double eatBlockDistance = 0.15;
 

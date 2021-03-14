@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include "Coordinate.hpp"
+#include "SimulationParameters.hpp"
 
 struct PIDGains {
   double kp;
@@ -39,7 +40,8 @@ coordinate getPositionAroundBlock(coordinate blockPosition, coordinate robotPosi
 coordinate getBlockPosition(std::tuple<double, double> afterLastJump, std::tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
   coordinate robotPosition, const double sensorBeamAngle);
 coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double blockAvgDistance, double blockAvgAngle);
-double getWallDistance(const coordinate robotPos, double angle);
+double getWallDistance(const coordinate robotPos, double angle, coordinate sensorDisp=distanceSensorDisplacement);
+double getWallCollisionDistance(const coordinate robotPos, double angle);
 double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector);
 coordinate getPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
 coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing);
