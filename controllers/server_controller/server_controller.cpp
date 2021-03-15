@@ -150,10 +150,7 @@ message* receiveData(Receiver* receiver) {
 
 void tell_robot_scan(int robot_identifier) {							//outputs a message telling the green robot to scan for blocks
 	message scan_message{};
-	if(robot_identifier == 1)
-		scan_message = { 180, 0.0 , 0.0 };								//1 means addressing green robot, 8 means telling it to scan
-	else if (robot_identifier == 2)
-		scan_message = { 280, 0.0, 0.0 };								//2 means addressing red robot
+	scan_message = { robot_identifier * 100 + 80, green_blocks_collected, red_blocks_collected };
 	emitData(emitter, (const void*) &scan_message, 20);	
 }
 
@@ -163,6 +160,10 @@ void add_block_to_list(double x_coordinate, double z_coordinate, int colour) {		
 
 
 void pathfind(int robot_identifier) {
+
+	if ((robot_identifier == 1 && green_blocks_collected == 4) || (robot_identifier == 2 && red_blocks_collected == 4)) {
+		return;
+	}
 
 	message new_target_message{};
 
