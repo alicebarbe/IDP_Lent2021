@@ -31,7 +31,7 @@ PROTO WebotsAssembly [
           baseColor 0.700000 0.700000 0.700000
           transparency 0.000000
           roughness 1.000000
-          metalness 0
+          metalness 1
           emissiveColor 0.000000 0.000000 0.000000
         }
         geometry DEF base_link IndexedFaceSet {
@@ -98,7 +98,7 @@ PROTO WebotsAssembly [
         device [
           RotationalMotor {
             name "trap_door"
-            maxTorque 10000
+            maxTorque 50000
           }
           PositionSensor {
             name "trap_door_sensor"
@@ -388,7 +388,7 @@ PROTO WebotsAssembly [
         device [
           RotationalMotor {
             name "wheel2"
-            maxTorque 10000
+            maxTorque 50000
           }
           PositionSensor {
             name "wheel1_sensor"
@@ -447,7 +447,7 @@ PROTO WebotsAssembly [
         device [
           RotationalMotor {
             name "wheel1"
-            maxTorque 10000
+            maxTorque 50000
           }
           PositionSensor {
             name "wheel2_sensor"
@@ -813,7 +813,7 @@ PROTO WebotsAssembly [
     boundingObject USE base_link
     physics Physics {
       density -1
-      mass 2
+      mass 5
       centerOfMass [ 0.059096 0.008536 -0.017837 ]
       
     }

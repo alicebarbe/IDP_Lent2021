@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 1 -1.9677189943494534e-15 -2.531935514961135e-15 4.5223889803846875
-  position 0.32218914277431526 7.220662831005118 -1.3806035168167126
+  orientation 0.9997606974814157 0.015925504907891498 0.01499753529423837 4.772150078183547
+  position 0.3250297212119412 7.5177893111712 0.5022266339150698
 }
 Background {
   skyColor [
@@ -48,7 +48,7 @@ target {
   name "target(7)"
 }
 target {
-  translation -0.6302 0.05 -0.2233
+  translation -0.6302 0.05 0.5867
   name "target(6)"
 }
 target {
@@ -57,7 +57,7 @@ target {
   name "target(5)"
 }
 target {
-  translation -0.8111 0.05 0.2173
+  translation -0.8111 0.05 -0.7127
   colour 0 1 0
   name "target(1)"
 }
