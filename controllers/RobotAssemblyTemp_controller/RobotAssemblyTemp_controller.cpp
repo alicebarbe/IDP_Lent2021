@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
-  setMotorVelocity(motors, tuple<double, double, double, double>(0.3, -0.3, 0.5, 0.5));
+  setMotorVelocity(motors, tuple<double, double, double, double>(0.5, 0.5, 0.5, 0.5));
   // You should insert a getDevice-like function in order to get the
   // instance of a device of the robot. Something like:
   //  Motor *motor = robot->getMotor("motorname");

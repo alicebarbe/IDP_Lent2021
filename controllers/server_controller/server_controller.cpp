@@ -72,8 +72,9 @@ int main(int argc, char** argv) {
 		message* received_data = receiveData(receiver);
 
 		if (received_data) {
-			if (get<0>(*received_data) != 125 && get<0>(*received_data) != 225 && get<0>(*received_data) != 220 && get<0>(*received_data) != 120) {
-				cout << "Server: " << get<0>(*received_data) << " , " << get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
+			//if (get<0>(*received_data) != 125 && get<0>(*received_data) != 225 && get<0>(*received_data) != 220 && get<0>(*received_data) != 120) {
+			if (get<0>(*received_data) != 125 && get<0>(*received_data) != 120) {
+			cout << "Server: " << get<0>(*received_data) << " , " << get<1>(*received_data) << ", " << get<2>(*received_data) << endl;
 			}
 			switch (get<0>(*received_data)) {
 			case(110):tell_robot_scan(1); green_scan_complete = false; break;									//green robot has sent hello message

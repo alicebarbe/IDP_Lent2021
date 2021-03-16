@@ -304,6 +304,7 @@ vector<coordinate> scanForBlocks(bool scanning_whole_arena, bool (*emergencyFunc
 }
 
 void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
+    cout << "I am " << robotColour << " and I am going to deal with a block!" << endl;
     
     const double distanceToFloorThresh = 0.08;
 
