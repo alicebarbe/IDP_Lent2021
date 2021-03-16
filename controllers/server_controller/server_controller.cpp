@@ -145,6 +145,7 @@ int main(int argc, char** argv) {
 				}
 				break;
 			case(270):
+				cout << "I am Red I have " << red_blocks_collected << "  blocks" << endl;
 				if (!tell_robot_go_to_next_path_position(2)) {
 					red_going_to_target_block = false;
 					if (red_blocks_collected != 4 && target_list.size()) {

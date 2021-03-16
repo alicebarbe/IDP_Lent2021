@@ -91,14 +91,8 @@ int main(int argc, char** argv) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
-            if(((int)get<1>(*receivedData) != 4) && ((int)get<2>(*receivedData) != 4)){
-                turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
-                targetPoints = scanForBlocks(0, emergencyChecker);
-            }           
-            else if ((((int)get<1>(*receivedData) == 4) && robotColour == RED_ROBOT) || (((int)get<2>(*receivedData) == 4) && robotColour == GREEN_ROBOT)) {
-                turnToBearing((robotColour == RED_ROBOT) ? 285 : 105, emergencyChecker);
-                targetPoints = scanForBlocks(1, emergencyChecker);
-            }
+          turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
+          targetPoints = scanForBlocks(0, emergencyChecker);
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
@@ -233,7 +227,7 @@ vector<coordinate> scanForBlocks(bool scanning_whole_arena, bool (*emergencyFunc
   const double wallSeparationThresh = 0.08;   // detect blocks if they are this far from the wall
   double angleToRotate = 0;
   if (!scanning_whole_arena) angleToRotate = 200;
-  else angleToRotate = 330;
+  else angleToRotate = 360;
 
   int i = 0;
 
