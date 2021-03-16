@@ -73,8 +73,7 @@ coordinate otherRobotDestination; // where the other robot is headed
 
 int main(int argc, char** argv) {
   // get the time step of the current world.
-  
-  timeDelay(5, emergencyChecker);
+    timeDelay(5, emergencyChecker);
 
   // identify what colour robot 
 

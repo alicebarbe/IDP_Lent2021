@@ -377,7 +377,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 	}
 	finder.add_circles_at_blocks(blocks, 0.15);
 	finder.update_children();
-	finder.print_grid();
+	//finder.print_grid();
 
 	tuple<bool, coordinate> offset_target = offsetPointAwayFromWall(target_block, 0.15, 0.35);
 	if (get<0>(offset_target)) {
