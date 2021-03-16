@@ -38,6 +38,7 @@ void tell_robot_go_to_position(int robot_identifier, coordinate position);
 void tell_robot_go_home(int robot_identifier);
 bool tell_robot_go_to_next_path_position(int robot_identifier);
 void send_emergency_message(int robot_identifier);
+tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
 vector<coordinate> obstacle_avoidance(vector<distance_coordinate_and_colour> block_list, distance_coordinate_and_colour target_block, coord robot_position);
 vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coord robot_pos, int robot_identifier = 0, bool robot_collision = false);
 
@@ -353,8 +354,8 @@ vector<coordinate> obstacle_avoidance(vector<distance_coordinate_and_colour> blo
 }
 
 vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coord robot_pos, int robot_identifier, bool robot_collision) {
-	coordinate arena_max(1.2, 1.2);
-	coordinate arena_min(-1.2, -1.2);
+	coordinate arena_max(ARENA_X_MAX - closestPathfindDistanceToWall, ARENA_Z_MAX - closestPathfindDistanceToWall);
+	coordinate arena_min(ARENA_X_MIN + closestPathfindDistanceToWall, ARENA_Z_MIN + closestPathfindDistanceToWall);
 	vector<coordinate> blocks;
 	for (int i = 0; i < block_list.size(); i++) {
 		blocks.push_back(coordinate(get<1>(block_list[i]), get<2>(block_list[i])));
@@ -362,15 +363,8 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 
 	vector<coordinate> path;
 	coordinate robot_coordinate(robot_pos);
-
-	//tuple<bool, coordinate> offset_target = offsetPointAwayFromWall(target_block, 0.15, 0.35);
-	//if (get<0>(offset_target)) {
-		// something here to go straight there or die
-	//}
-
 	coordinate target_displacement = target_block - robot_coordinate;
 	double bearing = constrainBearing(getBearing(target_displacement * -1));
-	coordinate possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
 
 	GridPathFinder finder = GridPathFinder(arena_max, arena_min, 0.01);
 	if (robot_collision) {
@@ -383,22 +377,37 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 	}
 	finder.add_circles_at_blocks(blocks, 0.15);
 	finder.update_children();
-	// finder.print_grid();
+	finder.print_grid();
 
-	// search += 90 degrees for any valid approach angle
-	for (int i = 0; i < 90; i++) {
-		bearing = constrainBearing(getBearing(target_displacement * -1) + i);
-		possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
-
-		if (finder.find_path(possible_target, robot_coordinate, path)) {
-			break;
+	tuple<bool, coordinate> offset_target = offsetPointAwayFromWall(target_block, 0.15, 0.35);
+	if (get<0>(offset_target)) {
+		// something here to go straight there or die
+		cout << "adding wall offset" << endl;
+		if (!finder.find_path(get<1>(offset_target), robot_coordinate, path)) {
+			cout << "Path finding failed!" << endl;
+			path.push_back(get<1>(offset_target));
+			path.push_back(target_block);
+			return path;
 		}
+	}
+	else {
+		coordinate possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
 
-		bearing = constrainBearing(getBearing(target_displacement * -1) - i);
-		possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
+		// search += 90 degrees for any valid approach angle
+		for (int i = 0; i < 90; i += 2) {
+			bearing = constrainBearing(getBearing(target_displacement * -1) + i);
+			possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
 
-		if (finder.find_path(possible_target, robot_coordinate, path)) {
-			break;
+			if (finder.find_path(possible_target, robot_coordinate, path)) {
+				break;
+			}
+
+			bearing = constrainBearing(getBearing(target_displacement * -1) - i);
+			possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
+
+			if (finder.find_path(possible_target, robot_coordinate, path)) {
+				break;
+			}
 		}
 	}
 

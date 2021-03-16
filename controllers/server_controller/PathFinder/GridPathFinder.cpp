@@ -157,7 +157,9 @@ coordinate GridPathFinder::coordinate_from_square_pos(int x, int y) {
 }
 
 tuple<int, int> GridPathFinder::square_pos_from_coordinate(coordinate pos) {
-	return tuple<int, int>((pos - arena_min).x / square_size, (pos - arena_min).z / square_size);
+
+	return tuple<int, int>(clamp(int((pos - arena_min).x / square_size), 0, height -1),
+		clamp(int((pos - arena_min).z / square_size), 0, width - 1));
 }
 
 bool GridPathFinder::find_path(coordinate start_pos, coordinate end_pos, vector<coordinate>& coordinates) {

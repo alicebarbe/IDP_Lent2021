@@ -36,5 +36,6 @@ inline const coordinate distanceSensorDisplacement(0.082, 0.0);
 inline const coordinate rightMostPointDispacement(0.0, 0.123);  //A vector out from the GPS to the outer edge of the wheel
 inline const double eatBlockDistance = 0.16;
 inline const double closestDistanceBlockFromWall = 0.05;  // we dont attempt to go closer to the wall than this
+inline const double closestPathfindDistanceToWall = 0.15; // we dont allow the A* algorithm to go closer than this to the wall
 inline const double approachBlockPerpendicularFromWallDistance = 0.15;  //(m) approach blocks closer to the wall than this perpendicular to the wall
 

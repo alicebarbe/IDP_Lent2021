@@ -106,12 +106,6 @@ int main(int argc, char** argv) {
           break;
         case(00): {
           blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
-          tuple<bool, coordinate> needViaPoint = offsetPointAwayFromWall(blockPosition, 0.15, 0.35);
-          if (get<0>(needViaPoint)) {
-            currentDestination = get<1>(needViaPoint);
-            coutWithName << "Going to block via point away from wall" << endl;
-            moveToPosition(get<1>(needViaPoint), false, emergencyChecker);
-          }
           currentDestination = blockPosition;
           if (moveToPosition(blockPosition, true, emergencyChecker)) {
             dealwithblock(emergencyChecker);
