@@ -403,8 +403,23 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
         if (canUseDistanceSensor() && positionIsBlock) {
           double distance = getDistanceMeasurement(ds1);
           if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
+            // TODO: check carefully that this works
             cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
             blockLost = true;
+            coordinate relocatedTarget;
+            // relocate by turning slightly
+            if (relocateBlock(relocatedTarget, emergencyFunc, emergencyParams)) {
+              updateTargetPosition(relocatedTarget);
+              blockLost = false;
+            }
+            else {
+              //open and close the gripper to try and relocate again
+              closeGripper(gripperservo); timeDelay(15, emergencyFunc);
+              openGripper(gripperservo);
+              if (tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
+                blockLost = false;
+              }
+            }
           }
         }
         if (emergencyChecker(emergencyParams)) {
@@ -451,8 +466,23 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     if (canUseDistanceSensor() && positionIsBlock) {
       double distance = getDistanceMeasurement(ds1);
       if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
+        //TODO: check carefully that this works
         cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
         blockLost = true;
+        coordinate relocatedTarget;
+        // relocate by turning slightly
+        if (relocateBlock(relocatedTarget, emergencyFunc, emergencyParams)) {
+          updateTargetPosition(relocatedTarget);
+          blockLost = false;
+        }
+        else {
+          //open and close the gripper to try and relocate again
+          closeGripper(gripperservo); timeDelay(15, emergencyFunc);
+          openGripper(gripperservo);
+          if (tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
+            blockLost = false;
+          }
+        }
       }
     }
     if (hasReachedPosition()) {
