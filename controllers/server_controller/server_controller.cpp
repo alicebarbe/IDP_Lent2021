@@ -38,9 +38,10 @@ void tell_robot_go_to_position(int robot_identifier, coordinate position);
 void tell_robot_go_home(int robot_identifier);
 bool tell_robot_go_to_next_path_position(int robot_identifier);
 void send_emergency_message(int robot_identifier);
+vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_posiiton);
+bool straight_path_is_clear(coordinate robot_pos, coordinate block_pos);
 tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
-vector<coordinate> obstacle_avoidance(vector<distance_coordinate_and_colour> block_list, distance_coordinate_and_colour target_block, coord robot_position);
-vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coord robot_pos, int robot_identifier = 0, bool robot_collision = false);
+vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coordinate robot_pos, bool target_is_block, int robot_identifier = 0, bool robot_collision = false);
 
 
 
@@ -222,12 +223,13 @@ bool pathfind(int robot_identifier) {
 			target_list.erase(target_list.begin() + j);									//once we have sent it as a target, remove it from list
 			robot_is_home[robot_identifier - 1] = 0;
 			if (robot_identifier == 1) {
-				green_robot_path = a_star_block_avoid(target_list, next_target, green_position);
+				green_robot_path = find_path_to_block(next_target, green_position);
+				return true;
 			}
 			if (robot_identifier == 2) {
-				red_robot_path = a_star_block_avoid(target_list, next_target, red_position);
+				red_robot_path = find_path_to_block(next_target, red_position);
+				return true;
 			}
-			return true;
 		}
 	}
 	if (robot_is_home[(robot_identifier - 1)] == 0) {
@@ -311,49 +313,33 @@ void send_emergency_message(int robot_identifier) {
 	emitData(emitter, (const void*) &new_target_message, 20);
 }
 
-vector<coordinate> obstacle_avoidance(vector<distance_coordinate_and_colour> block_list, coord target_block, coord robot_position) {
+vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_position) {
 	vector<coordinate> path;
-	coordinate target_coordinate(get<0>(target_block), get<1>(target_block));
-	coordinate robot_coordinate(robot_position);
-	coordinate path_bearing_vector = (target_coordinate - robot_coordinate).norm();
-	coordinate perp_path_bearing_vector(-path_bearing_vector.z, path_bearing_vector.x);
+	coordinate target;
+	bool target_is_via_point = false;
+	tie(target_is_via_point, target) = offsetPointAwayFromWall(target_block, 0.15, 0.35);
 
-	for (int i = 1; i < block_list.size(); i++) {
-		coordinate block_coordinate = coordinate(get<1>(block_list[i]), get<2>(block_list[i]));
-		if (block_coordinate == target_coordinate) continue;
-
-		coordinate displacement_from_robot = block_coordinate - robot_coordinate;
-		double distance_parallel_to_path = displacement_from_robot.x * path_bearing_vector.x + displacement_from_robot.z * path_bearing_vector.z;
-		if (distance_parallel_to_path > 0) {
-			//only consider blocks infront of the robots path
-			// using cross product - positive is in clockwise rotation from path
-			double distance_perp_to_path = displacement_from_robot.z * path_bearing_vector.x - displacement_from_robot.x * path_bearing_vector.z;
-			if (abs(distance_perp_to_path) < robot_half_width_clearance) {
-				cout << "Collision with block at " << block_coordinate << endl;
-				coordinate point_near_obstruction = robot_coordinate + path_bearing_vector * distance_parallel_to_path;
-				coordinate via_coordinate;
-				if (distance_perp_to_path > 0) {
-					via_coordinate = point_near_obstruction + perp_path_bearing_vector * (-robot_half_width_clearance + distance_perp_to_path);
-				}
-				else {
-					via_coordinate = point_near_obstruction + perp_path_bearing_vector * (robot_half_width_clearance + distance_perp_to_path);
-				}
-				cout << "Adding to path: " << via_coordinate << endl;
-				path.push_back(via_coordinate);
-
-				// put the robot at this position and continue
-				robot_coordinate = via_coordinate;
-				coordinate path_bearing_vector = (target_coordinate - robot_coordinate).norm();
-				coordinate perp_path_bearing_vector(-path_bearing_vector.z, path_bearing_vector.x);
-			}
+	cout << "Trying to get to :" << target_block << endl;
+	if (straight_path_is_clear(robot_position, target)) {
+		cout << "Path straight to block is clear" << endl;
+		path.push_back(target);
+	}
+	else {
+		cout << "Path not clear, attempting an A* pathfind" << endl;
+		path = a_star_block_avoid(target_list, target, robot_position, !target_is_via_point);
+		if (path.size() == 0) {
+			cout << "No A* solution found, ramming through" << endl;
+			//ram through
+			path.push_back(target);
 		}
 	}
-
-	path.push_back(target_coordinate);
+	if (target_is_via_point) {
+		path.insert(path.begin(), target_block);
+	}
 	return path;
 }
 
-vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coord robot_pos, int robot_identifier, bool robot_collision) {
+vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coordinate robot_pos, bool target_is_block, int robot_identifier, bool robot_collision) {
 	coordinate arena_max(ARENA_X_MAX - closestPathfindDistanceToWall, ARENA_Z_MAX - closestPathfindDistanceToWall);
 	coordinate arena_min(ARENA_X_MIN + closestPathfindDistanceToWall, ARENA_Z_MIN + closestPathfindDistanceToWall);
 	vector<coordinate> blocks;
@@ -361,6 +347,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 		blocks.push_back(coordinate(get<1>(block_list[i]), get<2>(block_list[i])));
 	}
 
+	bool has_found_path = false;
 	vector<coordinate> path;
 	coordinate robot_coordinate(robot_pos);
 	coordinate target_displacement = target_block - robot_coordinate;
@@ -377,20 +364,10 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 	}
 	finder.add_circles_at_blocks(blocks, 0.15);
 	finder.update_children();
-	finder.print_grid();
+	// finder.print_grid();
 
-	tuple<bool, coordinate> offset_target = offsetPointAwayFromWall(target_block, 0.15, 0.35);
-	if (get<0>(offset_target)) {
-		// something here to go straight there or die
-		cout << "adding wall offset" << endl;
-		if (!finder.find_path(get<1>(offset_target), robot_coordinate, path)) {
-			cout << "Path finding failed!" << endl;
-			path.push_back(get<1>(offset_target));
-			path.push_back(target_block);
-			return path;
-		}
-	}
-	else {
+
+	if (target_is_block) {
 		coordinate possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
 
 		// search += 90 degrees for any valid approach angle
@@ -399,6 +376,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 			possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
 
 			if (finder.find_path(possible_target, robot_coordinate, path)) {
+				has_found_path = true;
 				break;
 			}
 
@@ -406,26 +384,60 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 			possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
 
 			if (finder.find_path(possible_target, robot_coordinate, path)) {
+				has_found_path = true;
 				break;
 			}
 		}
 	}
-
-	cout << "path size before simplificiation: " << path.size() << endl;
-
-	// add the start position, then remove after simplifying otherwise the robot shivers
-	path.insert(path.end() - 1, robot_pos);
-	path = finder.simplify_path(path, 0.02);
-	path.pop_back();
-	path.insert(path.begin(), target_block);
-
-	cout << "Path found : " << endl;
-	for (int i = 0; i < path.size(); i++) {
-		cout << path[i] << endl;
+	else {
+		if (finder.find_path(target_block, robot_coordinate, path)) {
+			cout << "Found a path" << endl;
+			has_found_path = true;
+		}
 	}
-	cout << endl;
+
+	if (has_found_path) {
+		cout << "path size before simplificiation: " << path.size() << endl;
+
+		// add the start position, then remove after simplifying otherwise the robot shivers
+		path.insert(path.end() - 1, robot_pos);
+		path.insert(path.begin(), target_block);
+		path = finder.simplify_path(path, 0.02);
+		path.pop_back();
+
+		cout << "Path found : " << endl;
+		for (int i = 0; i < path.size(); i++) {
+			cout << path[i] << endl;
+		}
+		cout << endl;
+	}
 
 	return path;
+}
+
+bool straight_path_is_clear(coordinate robot_pos, coordinate block_pos) {
+	coordinate path_bearing_vector = (block_pos - robot_pos).norm();
+	coordinate perp_path_bearing_vector(-path_bearing_vector.z, path_bearing_vector.x);
+	double target_distance = (block_pos - robot_pos).x * path_bearing_vector.x + (block_pos - robot_pos).z * path_bearing_vector.z;
+
+	for (int i = 1; i < target_list.size(); i++) {
+		coordinate block_coordinate = coordinate(get<1>(target_list[i]), get<2>(target_list[i]));
+		if (block_coordinate == block_pos) continue;
+
+		coordinate displacement_from_robot = block_coordinate - robot_pos;
+		double distance_parallel_to_path = displacement_from_robot.x * path_bearing_vector.x + displacement_from_robot.z * path_bearing_vector.z;
+		if (distance_parallel_to_path > 0 && distance_parallel_to_path < target_distance) {
+			//only consider blocks infront of the robots path
+			// using cross product - positive is in clockwise rotation from path
+			double distance_perp_to_path = displacement_from_robot.z * path_bearing_vector.x - displacement_from_robot.x * path_bearing_vector.z;
+			if (abs(distance_perp_to_path) < robot_half_width_clearance) {
+				cout << "Collision with block at " << block_coordinate << endl;
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset) {
