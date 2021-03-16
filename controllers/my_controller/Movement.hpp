@@ -1,19 +1,47 @@
 #pragma once
 
-#include <webots/Motor.hpp>
 #include <tuple>
+#include "Coordinate.hpp"
+#include "SimulationParameters.hpp"
 
 struct PIDGains {
   double kp;
   double ki;
   double kd;
   double moveThresh;
+  double integralThresh;
 };
 
-std::tuple<double, double> moveToPosition(std::tuple<double, double> position, std::tuple<double, double> current_position, double current_bearing);
-double turnToBearing(double bearing, double current_bearing);
+struct PIDState {
+  double lastError;
+  double integral;
+};
 
-//utility functions
-double getBearingDifference(double bearing_one, double bearing_two);
-double getPIDOutput(double error, PIDGains gains);
-double getBearing(const double* vector);
+// Updating target functions
+void updateTargetPosition(coordinate newTarget, bool reverse = false);
+void updateTargetBearing(double newBearing);
+void updateTargetDistance(coordinate newTarget, bool reverse = true);
+bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* currentBearingVector, double distance, double lostThreshold);
+
+// flag retrieval functions used to monitor control behavior
+bool hasReachedPosition();
+bool canUseDistanceSensor();
+bool hasReachedTargetBearing();
+coordinate getTargetPosition();
+bool isMaintainingTargetBearing();
+
+// Control loop functions to be called in a main loop
+std::tuple<double, double> updateRotationControlLoop(const double* currentBearingVector);
+std::tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, const double* currentBearingVector);
+double getBearingCorrection(double bearing, double currentBearing);
+
+// Positioning functions - these should probably go elsewhere
+coordinate getPositionAroundBlock(coordinate blockPosition, coordinate robotPosition, coordinate displacement);
+coordinate getBlockPosition(std::tuple<double, double> afterLastJump, std::tuple<double, double> beforeJump, bool lastJumpWasFall, bool jumpWasFall,
+  coordinate robotPosition, const double sensorBeamAngle);
+coordinate getBlockPositionFromAngleAndDistance(coordinate robotPosition, double blockAvgDistance, double blockAvgAngle);
+double getWallDistance(const coordinate robotPos, double angle, coordinate sensorDisp=distanceSensorDisplacement);
+double getWallCollisionDistance(const coordinate robotPos, double angle);
+double getExpectedDistanceOfBlock(coordinate robotPosition, const double* currentBearingVector);
+coordinate getPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
+coordinate getBlockPositionInGrabber(coordinate robotPosition, double bearing);

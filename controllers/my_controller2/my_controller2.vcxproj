@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{B2AA53B0-6416-4406-8FF5-6D43BBA8B305}</ProjectGuid>
-    <RootNamespace>my_controller</RootNamespace>
+    <RootNamespace>my_controller2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -43,7 +43,6 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -73,9 +72,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)</OutDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)</OutDir>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -90,15 +86,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(WEBOTS_HOME)\include\controller\c;$(WEBOTS_HOME)\include\controller\cpp</AdditionalIncludeDirectories>
-      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
-    <Link>
-      <OutputFile>$(ProjectName).exe</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Controller.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(WEBOTS_HOME)\lib\controller\</AdditionalLibraryDirectories>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -122,16 +110,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <AdditionalIncludeDirectories>C:\Program Files\Webots\include\controller\cpp;C:\Program Files\Webots\include\controller\c</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WEBOTS_HOME)/include/controller/c;$(WEBOTS_HOME)/include/controller/cpp</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(WEBOTS_HOME)\lib\controller</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;controller.lib;Controller.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(my_controller).exe</OutputFile>
+      <AdditionalLibraryDirectories>$(WEBOTS_HOME)/lib/controller</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;controller.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -168,64 +153,7 @@
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Speaker.cpp" />
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Supervisor.cpp" />
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\TouchSensor.cpp" />
-    <ClCompile Include="CommunicationClient.cpp" />
-    <ClCompile Include="Coordinate.cpp" />
-    <ClCompile Include="Motors.cpp" />
-    <ClCompile Include="Movement.cpp" />
-    <ClCompile Include="my_controller.cpp" />
-    <ClCompile Include="Sensors.cpp" />
-    <ClCompile Include="Servos.cpp" />
-    <ClCompile Include="Utility.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Accelerometer.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Brake.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Camera.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Compass.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Connector.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Device.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\DifferentialWheels.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Display.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\DistanceSensor.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Emitter.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Field.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\GPS.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Gyro.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\ImageRef.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\InertialUnit.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Joystick.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Keyboard.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\LED.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Lidar.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\LightSensor.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Motor.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Mouse.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Node.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Pen.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\PositionSensor.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Radar.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\RangeFinder.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Receiver.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Robot.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Skin.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Speaker.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\Supervisor.hpp" />
-    <ClInclude Include="..\..\..\..\..\AppData\Local\Programs\Webots\include\controller\cpp\webots\TouchSensor.hpp" />
-    <ClInclude Include="CommunicationClient.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Coordinate.hpp" />
-    <ClInclude Include="Motors.hpp" />
-    <ClInclude Include="Movement.hpp" />
-    <ClInclude Include="Sensors.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Servos.hpp" />
-    <ClInclude Include="SimulationParameters.hpp" />
-    <ClInclude Include="Utility.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\..\AppData\Local\Programs\Webots\src\controller\cpp\Makefile" />
+    <ClCompile Include="my_controller2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -19,23 +19,17 @@ WorldInfo {
 }
 Viewpoint {
   orientation 1 0 0 4.71238898038469
-  position 5.984084363831624e-16 5.728586677894563 -1.681637488558908e-16
+  position -5.6792320080435824e-05 8.730893753334739 -1.969242284901119e-05
 }
 Background {
   skyColor [
     0.15 0.45 1
   ]
 }
-WebotsAssembly {
-}
 Floor {
   size 2.4 2.4
   appearance Asphalt {
   }
-}
-ChangeLDRDesign {
-  translation -6.21882e-08 0.0500015 0.39
-  rotation 0.5773509358554485 0.5773509358554485 0.5773489358556708 -2.094395307179586
 }
 target {
   translation 0.7396 0.05 1.0751
@@ -59,7 +53,7 @@ target {
   name "target(5)"
 }
 target {
-  translation -0.9458 0.05 -0.0344
+  translation 0.7442 0.05 -0.0344
   colour 0 1 0
   name "target(1)"
 }
@@ -146,10 +140,12 @@ DEF WALL_4 Solid {
 TexturedBackgroundLight {
   texture "empty_office"
 }
-Laptop {
-  translation 1.53 0.55 3.24
+ChangeLDRDesign {
+  translation 0 -1.43254e-06 -0.39
 }
 ChangeLDRDesign {
-  translation -3.34591e-08 0.0499988 -0.39
-  rotation -0.5773509358554485 0.5773509358554485 0.5773489358556708 2.0944
+  translation 0 1.54274e-06 0.42
+}
+Laptop {
+  translation 1.49 0 0
 }

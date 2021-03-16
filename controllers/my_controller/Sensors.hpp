@@ -1,5 +1,6 @@
-
 #pragma once
+
+#include <tuple>
 
 #include <webots/Robot.hpp>
 #include <webots/DistanceSensor.hpp>
@@ -9,4 +10,5 @@ webots::DistanceSensor* initDistanceSensor(webots::Robot* robot, const char* nam
 std::tuple<webots::LightSensor*, webots::LightSensor*> initLightSensor(webots::Robot* robot, const char* red_sensor, const char* green_sensor);
 
 double getDistanceMeasurement(webots:: DistanceSensor* ds);
-int getLightMeasurement(std::tuple<webots::LightSensor*, webots::LightSensor*> sensors);
+std::tuple<bool, bool> getLightMeasurement(std::tuple<webots::LightSensor*, webots::LightSensor*> sensors);
+char checkColour(std::tuple<webots::LightSensor*, webots::LightSensor*> colourSensor);

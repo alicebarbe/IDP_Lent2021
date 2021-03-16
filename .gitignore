@@ -5,6 +5,7 @@
 build
 com
 webots_catkin_ws
+x64
 
 # Compiled source
 *.exe

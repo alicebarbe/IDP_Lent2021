@@ -5,6 +5,7 @@
 #include <webots/LightSensor.hpp>
 
 #include "Sensors.hpp"
+#include "SimulationParameters.hpp"
 
 using namespace webots;
 using namespace std;
@@ -56,20 +57,29 @@ double getDistanceMeasurement(DistanceSensor* ds) {
 
 /**
 * Simulates making a colour measurement (analog input) with the
-* ldr wein bridge setup. The retured value is the positive for redder 
-* light and negative for greener light. The bias from the analog voltage 
-* has been subtracted.
+* ldr wein bridge  and comparator setup. Reference voltages (tuned 
+* with a trimmer pot) are set in SimulationParameters.hpp
 *
 * @param ls (tuple<LightSensor*, LightSensor*>) the sensor to read
-* @returns analogValue (int) the 10-bit voltage measurement from the 
-* differential amplifier, minus the DC bias value
+* @returns comparatorOutputs (tuple<bool, bool>) The comparator outputs 
+* in the form (red, geen). Values are true when the light intensity is higher 
+* than reference
 */
 
-int getLightMeasurement(tuple<LightSensor*, LightSensor*> sensors) {
-  return int(get<0>(sensors)->getValue()) - int(get<1>(sensors)->getValue());
+tuple<bool, bool> getLightMeasurement(tuple<LightSensor*, LightSensor*> sensors) {
+  return tuple<bool, bool>(get<0>(sensors)->getValue() > COMPARATOR_REF_RED, get<1>(sensors)->getValue() > COMPARATOR_REF_GREEN);
 }
 
-
+char checkColour(tuple<LightSensor*, LightSensor*> colourSensor)
+{
+	if (get<0>(getLightMeasurement(colourSensor))) {
+		return 2;			//RED
+	}
+  if (get<1>(getLightMeasurement(colourSensor))) {
+    return 1;			//GREEN
+  }
+  else return 0;
+}
 
 
 

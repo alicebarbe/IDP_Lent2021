@@ -20,7 +20,7 @@ Robot {
       ]
     }
     GPS {
-      translation 0 0.03 -0.02
+      translation 0 0.03 0.05
       name "gps"
       children [
         Shape {
@@ -55,7 +55,9 @@ Robot {
       device [
         RotationalMotor {
           name "gripper motor"
-          maxTorque 100
+          maxTorque 0.1
+        }
+        physics Physics {
         }
       ]
       endPoint Solid {
@@ -64,7 +66,7 @@ Robot {
           Solid {
             children [
               LightSensor {
-                translation -0.0425 0.020 0.00
+                translation -0.0425 0.040 0.00
                 rotation 0 0 1 -1.5707996938995747
                 lookupTable [0 0 0, 3 1023 0]
                 colorFilter 1 0 0
@@ -84,7 +86,7 @@ Robot {
                 ]
               }
               LightSensor {
-                translation -0.0425 0.020 -0.005
+                translation -0.0425 0.040 -0.005
                 rotation 0 0 1 -1.5707996938995747
                 lookupTable [0 0 0, 3 1023 0]
                 colorFilter 0 1 0
@@ -111,6 +113,8 @@ Robot {
                 geometry Box {
                   size 0.02 0.07 0.1
                 }
+                physics Physics {
+        }
               }
             ]
             boundingObject USE BOX
@@ -118,6 +122,8 @@ Robot {
         ]
         name "solid(3)"
         boundingObject USE BOX
+        physics Physics {
+        }
       }
     }
     Camera {
@@ -207,9 +213,9 @@ Robot {
     }
     DEF DS_RIGHT DistanceSensor {
       translation 0 0 0.1
-      rotation -0.03 0.9995 0 -1.570796
-      type "generic"
-      lookupTable[ 0 0 0,2.4 2.4 0]
+      rotation -0.02 0.9995 0 -1.570796
+      aperture 0.26179
+      lookupTable[ 0 0 0, 2.4 2.4 0]
       children [
         Shape {
           appearance PBRAppearance {
@@ -222,7 +228,7 @@ Robot {
           }
         }
       ]
-      name "ds_right"
+      name "ds"
     }
     DEF emitter Emitter{
     name "emitter"
