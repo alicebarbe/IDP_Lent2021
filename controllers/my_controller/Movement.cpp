@@ -88,7 +88,6 @@ bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
   if (targetPosition.z > 1.03) targetPosition.z = 1.03;
   if (targetPosition.z < -1.03) targetPosition.z = -1.03;
-  cout << targetPosition << endl;
   return true;
 }
 
