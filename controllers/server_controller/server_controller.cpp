@@ -65,8 +65,8 @@ char green_blocks_collected = 0;
 char red_blocks_collected = 0;
 vector<int> robot_is_home;
 
-const double robot_half_width_clearance = 0.15;
-const double radius_before_block = 0.15;
+const double robot_half_width_clearance = 0.20;
+const double radius_before_block = 0.17;
 
 vector<coordinate> green_robot_path;
 vector<coordinate> red_robot_path;

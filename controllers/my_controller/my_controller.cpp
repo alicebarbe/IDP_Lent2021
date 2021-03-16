@@ -41,7 +41,6 @@ bool emergencyChecker(void* emergencyParams);
 bool bypassEmergencyChecker(void* emergencyParams);
 vector<coordinate> scanForBlocks(bool scanning_whole_arena, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void dealwithblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
-void collectblock(bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
@@ -51,7 +50,6 @@ bool confirmBlockPosition();
 bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* emergencyParams = NULL);
 void handleBlockLost();
 
-int robotColour;
 int blocks_collected = 0;
 
 // Webots sensors/actuators
@@ -106,7 +104,6 @@ int main(int argc, char** argv) {
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
           break;
-        }
         case(00): {
           blockPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
           tuple<bool, coordinate> needViaPoint = offsetPointAwayFromWall(blockPosition, 0.15, 0.35);
@@ -340,9 +337,9 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
                     cout << "I am " << robotColour << " and i have choked" << endl;
                     openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
                     closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
-                    moveForward(-eatBlockDistance - 0.05, emergencyFunc, emergencyParams);
+                    moveForward(-eatBlockDistance - 0.05, false, emergencyFunc, emergencyParams);
                     openGripper(gripperservo); openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
-                    moveForward(eatBlockDistance, emergencyFunc, emergencyParams);
+                    moveForward(eatBlockDistance, false, emergencyFunc, emergencyParams);
                     closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
                 }
             }
