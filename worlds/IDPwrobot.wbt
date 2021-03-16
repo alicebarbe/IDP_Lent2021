@@ -18,14 +18,15 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.9999999999999999 -1.595153464449493e-15 -2.24573653271473e-17 0.32000000000001
-  position 0.07114879013260472 0.24765883375517453 0.5717409312184815
-  follow "RobotAssemblyTemp"
+  orientation 1 0 0 4.71238898038469
+  position 5.984084363831624e-16 5.728586677894563 -1.681637488558908e-16
 }
 Background {
   skyColor [
     0.15 0.45 1
   ]
+}
+WebotsAssembly {
 }
 Floor {
   size 2.4 2.4

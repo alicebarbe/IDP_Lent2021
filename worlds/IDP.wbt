@@ -3,12 +3,13 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.7 0.7 0.2 0.75
-  position 1.2 1.6 2.3
-
+  orientation -0.3219643099275591 0.9251388076104708 0.20113967730397445 1.1568885819424524
+  position 0.5534905927914705 0.21159089610617096 0.3700381117191659
 }
 Background {
   skyColor [
     0.4 0.7 1
   ]
+}
+WebotsAssembly {
 }

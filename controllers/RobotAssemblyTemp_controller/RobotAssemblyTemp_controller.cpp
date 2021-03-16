@@ -23,7 +23,7 @@ using namespace std;
 using namespace webots;
 
 Robot *robot = new Robot();
-tuple<Motor*, Motor*, Motor*, Motor*> motors = initMotors(robot, "Rev4", "Rev5", "Rev17", "Rev18");
+tuple<Motor*, Motor*, Motor*, Motor*> motors = initMotors(robot, "wheel2", "wheel1", "trap_door", "gripper motor");
 
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   
   // get the time step of the current world.
   int timeStep = (int)robot->getBasicTimeStep();
-  setMotorVelocity(motors, tuple<double, double, double, double>(0.8, 0.8, 0.5, 0.5));
+  setMotorVelocity(motors, tuple<double, double, double, double>(0.3, -0.3, 0.5, 0.5));
   // You should insert a getDevice-like function in order to get the
   // instance of a device of the robot. Something like:
   //  Motor *motor = robot->getMotor("motorname");
