@@ -26,7 +26,7 @@ coordinate coordinate::operator*(const double& d) {
 }
 
 bool coordinate::operator==(const coordinate& c) {
-  return (this->x == c.x) || (this->z == c.z);
+  return (this->x == c.x) && (this->z == c.z);
 }
 
 ostream& operator<<(ostream& os, const coordinate& c) {

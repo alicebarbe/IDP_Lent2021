@@ -169,6 +169,7 @@
     <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\TouchSensor.cpp" />
     <ClCompile Include="..\my_controller\Coordinate.cpp" />
     <ClCompile Include="..\my_controller\Utility.cpp" />
+    <ClCompile Include="Block.cpp" />
     <ClCompile Include="PathFinder\AStar.cpp" />
     <ClCompile Include="PathFinder\Dijkstra.cpp" />
     <ClCompile Include="PathFinder\GridPathFinder.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="..\my_controller\Coordinate.hpp" />
     <ClInclude Include="..\my_controller\SimulationParameters.hpp" />
     <ClInclude Include="..\my_controller\Utility.hpp" />
+    <ClInclude Include="Block.h" />
     <ClInclude Include="PathFinder\AStar.h" />
     <ClInclude Include="PathFinder\Dijkstra.h" />
     <ClInclude Include="PathFinder\GridPathFinder.hpp" />

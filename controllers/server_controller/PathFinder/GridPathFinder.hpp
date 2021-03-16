@@ -48,5 +48,5 @@ public:
 	void add_circle_at_robot(coordinate robot_position, double radius);
 	void delete_point_grid();
 
-	void print_grid();
+	void print_grid(coordinate start, coordinate end);
 };

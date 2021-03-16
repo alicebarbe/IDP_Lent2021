@@ -238,11 +238,25 @@ void GridPathFinder::delete_point_grid() {
 	delete squares;
 }
 
-void GridPathFinder::print_grid() {
+void GridPathFinder::print_grid(coordinate start, coordinate end) {
+	double start_x, start_y, end_x, end_y;
+	tie(start_x, start_y) = square_pos_from_coordinate(start);
+	tie(end_x, end_y) = square_pos_from_coordinate(end);
+
 	cout << "Grid: " << endl;
 	for (int x = width-1; x >= 0; x--) {
 		for (int y = 0; y < width; y++) {
-			cout << (squares[x][y].getType()) ? " " : "X";
+			if (start_x == x && start_y == y)
+			{
+				cout << "0";
+			}
+			else if (end_x == x && end_y == y)
+			{
+				cout << "X";
+			}
+			else {
+				cout << (squares[x][y].getType() ? "." : "B");
+			}
 		}
 		cout << endl;
 	}
