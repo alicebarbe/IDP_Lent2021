@@ -3,19 +3,7 @@
 #include <tuple>
 #include "Coordinate.hpp"
 #include "SimulationParameters.hpp"
-
-struct PIDGains {
-  double kp;
-  double ki;
-  double kd;
-  double moveThresh;
-  double integralThresh;
-};
-
-struct PIDState {
-  double lastError;
-  double integral;
-};
+#include "Utility.hpp"
 
 // Updating target functions
 void updateTargetPosition(coordinate newTarget, bool reverse = false);

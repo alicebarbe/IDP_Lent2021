@@ -4,7 +4,19 @@
 #include <vector>
 
 #include "Coordinate.hpp"
-#include "Movement.hpp"
+
+struct PIDGains {
+  double kp;
+  double ki;
+  double kd;
+  double moveThresh;
+  double integralThresh;
+};
+
+struct PIDState {
+  double lastError;
+  double integral;
+};
 
 double getCompassBearing(const double* vector);
 double getBearing(coordinate vector);

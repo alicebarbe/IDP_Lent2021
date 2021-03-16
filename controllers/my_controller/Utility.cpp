@@ -8,8 +8,6 @@
 #include "Utility.hpp"
 #include "Coordinate.hpp"
 #include "SimulationParameters.hpp"
-#include "Movement.hpp"
-#include "Coordinate.hpp"
 
 using namespace std;
 

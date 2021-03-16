@@ -6,23 +6,27 @@
 using namespace std;
 
 coordinate coordinate::operator+(const coordinate& c) {
-  coordinate coord;
-  coord.x = c.x + this->x;
-  coord.z = c.z + this->z;
-  return coord;
+  coordinate coordinate;
+  coordinate.x = c.x + this->x;
+  coordinate.z = c.z + this->z;
+  return coordinate;
 }
 coordinate coordinate::operator-(const coordinate& c) {
-  coordinate coord;
-  coord.x = this->x - c.x;
-  coord.z = this->z - c.z;
-  return coord;
+  coordinate coordinate;
+  coordinate.x = this->x - c.x;
+  coordinate.z = this->z - c.z;
+  return coordinate;
 }
 
 coordinate coordinate::operator*(const double& d) {
-  coordinate coord;
-  coord.x = this->x * d;
-  coord.z = this->z * d;
-  return coord;
+  coordinate coordinate;
+  coordinate.x = this->x * d;
+  coordinate.z = this->z * d;
+  return coordinate;
+}
+
+bool coordinate::operator==(const coordinate& c) {
+  return (this->x == c.x) || (this->z == c.z);
 }
 
 ostream& operator<<(ostream& os, const coordinate& c) {
@@ -35,9 +39,9 @@ coordinate::coordinate(double x, double z) {
   this->z = z;
 }
 
-coordinate::coordinate(tuple<double, double> coord) {
-  this->x = std::get<0>(coord);
-  this->z = std::get<1>(coord);
+coordinate::coordinate(tuple<double, double> coordinate) {
+  this->x = std::get<0>(coordinate);
+  this->z = std::get<1>(coordinate);
 }
 
 coordinate::coordinate(const double* gpsLoc) {
@@ -48,4 +52,8 @@ coordinate::coordinate(const double* gpsLoc) {
 coordinate::coordinate() {
   this->x = 0;
   this->z = 0;
+}
+
+coordinate coordinate::norm() {
+  return (*this) * (1.0 / sqrt(pow(x, 2) + pow(z, 2)));
 }

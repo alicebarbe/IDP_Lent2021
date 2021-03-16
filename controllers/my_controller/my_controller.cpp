@@ -113,8 +113,8 @@ int main(int argc, char** argv) {
           break;
         }
         case(90): {
-            cout << "I am " << robotColour << " and I am going home" << endl;
             currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+            cout << "I am " << robotColour << " and my destination is : " << currentDestination << endl;
             //TO-DO: change the below to currentDestination instead?
             moveToPosition(currentDestination, false, emergencyChecker);
             // moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
