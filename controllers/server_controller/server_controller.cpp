@@ -35,6 +35,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 bool obstacle_in_path(coordinate robot_pos, coordinate obstacle_pos, coordinate path_vector, double target_distance, double clearance);
 void set_robot_avoiding_collision(int robot_identifier, vector<coordinate> path);
 void handle_robot_collision(int robot_identifier);
+void tell_robot_end_collision(int robot_identifier);
 
 typedef std::tuple<int, double, double> message;
 
@@ -160,6 +161,7 @@ int main(int argc, char** argv) {
 						// in this case we have finished navigating the collision and can unpause the other robot
 						cout << "Un pausing robot " << robot_paused_collision << endl;
 						tell_robot_start_again(robot_paused_collision);
+						tell_robot_end_collision(robot_navigating_collision);
 						robot_paused_collision = 0;
 						robot_navigating_collision = 0;
 					}
@@ -187,6 +189,7 @@ int main(int argc, char** argv) {
 					if (robot_navigating_collision == 2) {
 						// in this case we have finished navigating the collision and can unpause the other robot
 						tell_robot_start_again(robot_paused_collision);
+						tell_robot_end_collision(robot_navigating_collision);
 						robot_paused_collision = 0;
 						robot_navigating_collision = 0;
 					}
@@ -364,7 +367,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 	if (target_is_block) {
 		coordinate possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
 
-		// search += 90 degrees for any valid approach angle
+		// search += 180 degrees for any valid approach angle
 		for (int i = 0; i < 180; i += 10) {
 			bearing = constrainBearing(getBearing(target_displacement * -1) + i);
 			possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
@@ -484,7 +487,6 @@ tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double dist
 }
 
 void handle_robot_collision(int robot_identifier) {
-	tell_robot_stop(3 - robot_identifier); 
 	vector<coordinate> possible_green_path;
 	vector<coordinate> possible_red_path;
 
@@ -495,18 +497,20 @@ void handle_robot_collision(int robot_identifier) {
 		possible_red_path = find_path_to_block(red_target_block, red_position, 2, true);
 	}
 
-	if (possible_green_path.size() > 0 && distanceBetweenPoints(red_position, green_target_block) < otherRobotProximityThresh) {
+	if (possible_green_path.size() > 0) { // && distanceBetweenPoints(red_position, green_target_block) > otherRobotProximityThresh) {
 		set_robot_avoiding_collision(1, possible_green_path);
 	}
-	else if (possible_red_path.size() > 0 && distanceBetweenPoints(green_position, red_target_block) < otherRobotProximityThresh) {
+	else if (possible_red_path.size() > 0) { // && distanceBetweenPoints(green_position, red_target_block) > otherRobotProximityThresh) {
 		set_robot_avoiding_collision(2, possible_red_path);
 	}
 	else {
 		//send one robot elsewhere
+		cout << " Should send one robot elsewhere" << endl;
 	}
 }
 
 void set_robot_avoiding_collision(int robot_identifier, vector<coordinate> path) {
+	tell_robot_stop(3 - robot_identifier);
 	if (robot_identifier == 1) green_robot_path = path;
 	else if (robot_identifier == 2) red_robot_path = path;
 	robot_navigating_collision = robot_identifier;
@@ -588,5 +592,10 @@ void tell_robot_stop(int robot_identifier) {
 
 void tell_robot_start_again(int robot_identifier) {
 	message start_message = message(97 + robot_identifier * 100, 0, 0);														//send next target green home
+	emitData(emitter, (const void*)&start_message, 20);
+}
+
+void tell_robot_end_collision(int robot_identifier) {
+	message start_message = message(96 + robot_identifier * 100, 0, 0);														//send next target green home
 	emitData(emitter, (const void*)&start_message, 20);
 }
