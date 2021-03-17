@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
   sendRobotLocation(gps, robotColour, emitter);
 
   while (robot->step(timeStep) != -1) {
+    coutWithName << "In main" << endl;
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       vector<coordinate> targetPoints;
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
             currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
             cout << "I am " << robotColour << " and my destination is : " << currentDestination << endl;
             //TO-DO: change the below to currentDestination instead?
-            moveToPosition(currentDestination, false, emergencyChecker, NULL, true);
+            moveToPosition(currentDestination, false, emergencyChecker, NULL, false);
             // moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
             sendDealtwithBlock(robotColour, emitter);
             closeTrapDoor(trapdoorservo);    //when we go home for the final time we need to shut the trapdoor so we can scan again if needed
@@ -126,9 +127,13 @@ int main(int argc, char** argv) {
           break;
         case(98):
           coutWithName << "Stopping for other robot" << endl;
-          timeDelay(10000, bypassEmergencyChecker);
-          return false;
+          setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+          waitUntilCollisionEventFinished();
+          sendDealtwithBlock(robotColour, emitter);
           break;
+        case(96):
+          coutWithName << "Ending collision event" << endl;
+          isAvoidingCollision = false;
         }
       }
       
@@ -157,7 +162,6 @@ bool emergencyChecker(void* emergencyParams) {
   // return true to cancel out of the last action - 
   // Note that some blocking actions call others therefore 
   // exiting out does not always take you to the very top - this should likely be change
-
   static int emergencyCounter = 0; // to avoid polling position every single time
   message* receivedData = receiveData(receiver);
   if (receivedData) {
@@ -174,6 +178,9 @@ bool emergencyChecker(void* emergencyParams) {
         waitUntilCollisionEventFinished();
         return false;
         break;
+      case(96):
+        coutWithName << "Ending collision event" << endl;
+        isAvoidingCollision = false;
       }
     }
     if (floor(get<0>(*receivedData) / 100) == (3 - robotColour)) {
@@ -227,7 +234,7 @@ bool emergencyChecker(void* emergencyParams) {
     if (isMovingToPosition && !isAvoidingCollision) {
       const double* compassVector = getDirection(compass);
       coordinate bearingVector(-compassVector[0], compassVector[2]);
-      double target_distance = (getTargetPosition() - currentRobotPosition).x * bearingVector.x + (getTargetPosition() - currentRobotPosition).z * bearingVector.z + forewardMostRobotPointDist;
+      double target_distance = (getTargetPosition() - currentRobotPosition).x * bearingVector.x + (getTargetPosition() - currentRobotPosition).z * bearingVector.z + forwardMostRobotPointDist;
       if (obstacle_in_robot_path(currentRobotPosition, otherRobotPosition, bearingVector, min(target_distance, otherRobotProximityThresh), robotHalfWidthClearance + collisionCircleRadius)) {
         coutWithName << "other robot incoming! " << endl;
         sendRobotCollisionMessage(robotColour, emitter);
@@ -456,6 +463,7 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
 }
 
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams, bool canReverse) {
+  coutWithName << "In move to position" << endl;
   isMovingToPosition = true;
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = blockPosition;
@@ -478,7 +486,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     tuple<double, double> motor_speeds = updatePositionalControlLoop(robotPos, bearing);
     setMotorVelocity(motors, motor_speeds);
 
-    if (emergencyChecker(emergencyParams)) {
+    if (emergencyFunc(emergencyParams)) {
       return false;
     }
     if (positionIsBlock && !hasConfirmedBlock && isMaintainingTargetBearing()) {
@@ -580,13 +588,15 @@ void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyPar
 }
 
 void waitUntilCollisionEventFinished() {
-  while (robot->step(timeStep) != -1) {
+  bool keepWaiting = true;
+  while (robot->step(timeStep) != -1 && keepWaiting) {
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       if (floor(get<0>(*receivedData) / 100) == robotColour) {
         switch (get<0>(*receivedData) % 100) {
         case(97):
           coutWithName << "Starting again, collision finished" << endl;
+          keepWaiting = false;
           break;
         }
       }
@@ -611,7 +621,7 @@ bool confirmBlockPosition() {
 bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* emergencyParams) {
   double startBearing = getCompassBearing(getDirection(compass));
   const double searchAngle = 3;
-  const double wallSeparationThresh = 0.03;
+  const double wallSeparationThresh = 0.08;
 
   for (int i = -searchAngle; i < searchAngle; i++) {
     turnToBearing(constrainBearing(startBearing + i), emergencyFunc, emergencyParams);
