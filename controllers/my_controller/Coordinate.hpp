@@ -14,5 +14,8 @@ public:
   coordinate operator-(const coordinate& c);
   coordinate operator+(const coordinate& c);
   coordinate operator*(const double& d);
+  bool operator==(const coordinate& c);
   friend std::ostream& operator<<(std::ostream& os, const coordinate& c);
+
+  coordinate norm();
 };

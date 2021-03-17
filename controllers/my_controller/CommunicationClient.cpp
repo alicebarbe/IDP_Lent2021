@@ -91,6 +91,12 @@ void sendDealtwithBlock(int robotIdentifier, Emitter* emitter) {
 	emitData(emitter, (const void*)&DealtwithBlockMessage, 20);
 }
 
+void sendRobotCollisionMessage(int robotIdentifier, Emitter* emitter) {
+	const message collisionMessage(robotIdentifier * 100 + 29, 0, 0);
+	emitData(emitter, (const void*)&collisionMessage, 20);
+}
+}
+
 void sendDebugMessage(int robotIdentifier, Emitter* emitter, int code) {
 	const message DebugMessage(robotIdentifier * 100 + code, 0, 0);
 	emitData(emitter, (const void*)&DebugMessage, 20);
