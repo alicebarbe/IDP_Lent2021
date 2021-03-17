@@ -168,7 +168,9 @@ bool GridPathFinder::find_path(coordinate start_pos, coordinate end_pos, vector<
 
 	tuple<int, int> start_square = square_pos_from_coordinate(start_pos);
 	tuple<int, int> end_square = square_pos_from_coordinate(end_pos);
-			
+	
+	// always set the start (which is the end because pathfinding happens backwards) as true
+	squares[get<0>(end_square)][get<1>(end_square)].setType(true);
 	p.setStart(squares[get<0>(start_square)][get<1>(start_square)]);
 	p.setGoal(squares[get<0>(end_square)][get<1>(end_square)]);
 

@@ -38,14 +38,13 @@ void tell_robot_go_to_position(int robot_identifier, coordinate position);
 void tell_robot_go_home(int robot_identifier);
 bool tell_robot_go_to_next_path_position(int robot_identifier);
 void tell_robot_stop(int robot_identifier);
+void tell_robot_start_again(int robot_identifier);
 void send_emergency_message(int robot_identifier);
 vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_position, int robot_identifier, bool robot_is_in_way = false);
 bool straight_path_is_clear(coordinate robot_pos, coordinate block_pos, int robot_identifier);
 tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
 vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coordinate robot_pos, bool target_is_block, int robot_identifier = 0, bool robot_collision = false);
 bool obstacle_in_path(coordinate robot_pos, coordinate obstacle_pos, coordinate path_vector, double target_distance, double clearance);
-
-
 
 Robot* server = new Robot();
 Receiver* receiver = initReceiver(server, "receiver");
@@ -78,6 +77,8 @@ const double radius_before_block = 0.17;
 vector<coordinate> green_robot_path;
 vector<coordinate> red_robot_path;
 
+int robot_navigating_collision = 0; 
+int robot_paused_collision = 0;
 
 int main(int argc, char** argv) {
 
@@ -106,8 +107,8 @@ int main(int argc, char** argv) {
 
 			case(125):green_destination = coord(get<1>(*received_data), get<2>(*received_data)); break;	//update destination of green robot
 			case(225):red_destination = coord(get<1>(*received_data), get<2>(*received_data)); break;
-			case(129):tell_robot_stop(2); green_robot_path = find_path_to_block(green_target_block, green_position, 1, true); break; // the green robot is going to get in the way of the red robot
-			case(229):tell_robot_stop(1); red_robot_path = find_path_to_block(red_target_block, red_position, 2, true); break; // the red robot is going to get in the way of the green robot
+			case(129):tell_robot_stop(2); green_robot_path = find_path_to_block(green_target_block, green_position, 1, true); robot_navigating_collision = 1; robot_paused_collision = 2;  break; // the green robot is going to get in the way of the red robot
+			case(229):tell_robot_stop(1); red_robot_path = find_path_to_block(red_target_block, red_position, 2, true); robot_navigating_collision = 2; robot_paused_collision = 1;   break; // the red robot is going to get in the way of the green robot
 
 			case(130):green_blocks_collected++; break;															//green robot has found a green block, Good!
 			case(140):add_block_to_list(get<1>(*received_data), get<2>(*received_data), 2);					//green robot has found a red block, update colour 
@@ -134,7 +135,12 @@ int main(int argc, char** argv) {
 			};
 			break;			//red robot has finished scan, if green has too, tell them wehre to go
 			case(170):
+				if (robot_paused_collision == 1) {
+					// dont tell the robot anything while it waits
+					break;
+				}
 				if (!tell_robot_go_to_next_path_position(1)) {
+					cout << "Green reached its destination" << endl;
 					green_going_to_target_block = false;
 					if (green_blocks_collected != 4 && target_list.size()) {
 						if (pathfind(1)) {
@@ -146,10 +152,21 @@ int main(int argc, char** argv) {
 						tell_robot_scan(1); tell_robot_scan(2);
 						red_scan_complete = false; green_scan_complete = false;
 					}
+					if (robot_navigating_collision == 1) {
+						// in this case we have finished navigating the collision and can unpause the other robot
+						cout << "Un pausing robot " << robot_paused_collision << endl;
+						tell_robot_start_again(robot_paused_collision);
+						robot_paused_collision = 0;
+						robot_navigating_collision = 0;
+					}
 				}
 				break;
 			case(270):
 				// <3
+				if (robot_paused_collision == 2) {
+					// dont tell the robot anything while it waits
+					break;
+				}
 				cout << "I am Red I have " << red_blocks_collected << "  blocks" << endl;
 				if (!tell_robot_go_to_next_path_position(2)) {
 					red_going_to_target_block = false;
@@ -162,6 +179,12 @@ int main(int argc, char** argv) {
 					else if (robot_is_home[1] && robot_is_home[0] && !target_list.size() && (red_blocks_collected != 4 || green_blocks_collected != 4)) {
 						tell_robot_scan(1); tell_robot_scan(2);
 						red_scan_complete = false; green_scan_complete = false;
+					}
+					if (robot_navigating_collision == 2) {
+						// in this case we have finished navigating the collision and can unpause the other robot
+						tell_robot_start_again(robot_paused_collision);
+						robot_paused_collision = 0;
+						robot_navigating_collision = 0;
 					}
 				}
 				break;
@@ -341,6 +364,11 @@ void tell_robot_stop(int robot_identifier) {
 	emitData(emitter, (const void*)&stop_message, 20);
 }
 
+void tell_robot_start_again(int robot_identifier) {
+	message start_message = message(97 + robot_identifier * 100, 0, 0);														//send next target green home
+	emitData(emitter, (const void*)&start_message, 20);
+}
+
 
 vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_position, int robot_identifier, bool robot_is_in_way) {
 	vector<coordinate> path;
@@ -360,6 +388,12 @@ vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_
 		if (path.size() == 0) {
 			cout << "No A* solution found, ramming through" << endl;
 			//ram through
+			if (robot_is_in_way) {
+				coordinate path_bearing_vector = (target_block - robot_position).norm();
+				path.push_back(robot_position - path_bearing_vector * 0.2); // reverse 0.2m
+				path.push_back(robot_position);
+				return path;
+			}
 			path.push_back(target);
 			path.push_back(robot_position);
 		}
@@ -404,13 +438,14 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 
 
 	if (target_is_block) {
-		coordinate possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
-		finder.print_grid(robot_pos, possible_target);
+		coordinate possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
 
 		// search += 90 degrees for any valid approach angle
-		for (int i = 0; i < 90; i += 2) {
+		for (int i = 0; i < 180; i += 10) {
 			bearing = constrainBearing(getBearing(target_displacement * -1) + i);
 			possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
+			cout << "Shift of: " << i << endl;
+			finder.print_grid(robot_pos, possible_target);
 
 			if (finder.find_path(possible_target, robot_coordinate, path)) {
 				has_found_path = true;
@@ -418,7 +453,10 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 			}
 
 			bearing = constrainBearing(getBearing(target_displacement * -1) - i);
-			possible_target = target_displacement + rotateVector(coordinate(radius_before_block, 0), bearing);
+			possible_target = target_block + rotateVector(coordinate(radius_before_block, 0), bearing);
+
+			cout << "Shift of: " << -i << endl;
+			finder.print_grid(robot_pos, possible_target);
 
 			if (finder.find_path(possible_target, robot_coordinate, path)) {
 				has_found_path = true;

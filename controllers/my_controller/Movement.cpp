@@ -130,6 +130,10 @@ tuple<double, double> updatePositionalControlLoop(coordinate currentPosition, co
     double target_bearing = getBearing(displacement);
     double current_bearing = getCompassBearing(currentBearingVector);
 
+    if (canReverse && abs(getBearingDifference(current_bearing, target_bearing)) > abs(getBearingDifference(current_bearing, constrainBearing(targetBearing + 180)))) {
+      target_bearing = constrainBearing(targetBearing + 180);  // enable reversing
+    }
+
     turning_speed = getBearingCorrection(target_bearing, current_bearing);
     maintainingBearing = false;
     if (abs(getBearingDifference(current_bearing, target_bearing)) < turnOnlyThresh) {
