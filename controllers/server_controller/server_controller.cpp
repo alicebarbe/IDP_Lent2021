@@ -388,7 +388,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 	coordinate target_displacement = target_block - robot_coordinate;
 	double bearing = constrainBearing(getBearing(target_displacement * -1));
 
-	GridPathFinder finder = GridPathFinder(arena_max, arena_min, 0.02);
+	GridPathFinder finder = GridPathFinder(arena_max, arena_min, 0.05);
 	if (robot_collision) {
 		if (robot_identifier == 1) {
 			finder.add_circle_at_robot(red_position, robotHalfWidthClearance + collisionCircleRadius);
@@ -437,7 +437,7 @@ vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> blo
 		// add the start position, then remove after simplifying otherwise the robot shivers
 		path.insert(path.end() - 1, robot_pos);
 		path.insert(path.begin(), target_block);
-		path = finder.simplify_path(path, 0.04);
+		path = finder.simplify_path(path, 0.08);
 
 		cout << "Path found : " << endl;
 		for (int i = 0; i < path.size(); i++) {
@@ -479,11 +479,11 @@ bool obstacle_in_path(coordinate robot_pos, coordinate obstacle_pos, coordinate 
 	coordinate perp_path_bearing_vector(-path_vector.z, path_vector.x);
 
 	coordinate displacement_from_robot = obstacle_pos - robot_pos;
-	double distance_parallel_to_path = displacement_from_robot.x * obstacle_pos.x + displacement_from_robot.z * obstacle_pos.z;
+	double distance_parallel_to_path = displacement_from_robot.x * path_vector.x + displacement_from_robot.z * path_vector.z;
 	if (distance_parallel_to_path > 0 && distance_parallel_to_path < target_distance) {
 		//only consider blocks infront of the robots path
 		// using cross product - positive is in clockwise rotation from path
-		double distance_perp_to_path = displacement_from_robot.z * obstacle_pos.x - displacement_from_robot.x * obstacle_pos.z;
+		double distance_perp_to_path = displacement_from_robot.z * path_vector.x - displacement_from_robot.x * path_vector.z;
 		if (abs(distance_perp_to_path) < clearance) {
 			cout << "Collision with obstacle at " << obstacle_pos << endl;
 			return true;

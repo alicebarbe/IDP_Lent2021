@@ -83,6 +83,9 @@ int main(int argc, char** argv) {
   sayHello(robotColour, emitter);
   sendRobotLocation(gps, robotColour, emitter);
 
+  coutWithName << "Collide: " << obstacle_in_robot_path(coordinate(0, 0), coordinate(0.4, 0.6), coordinate(1, 0), min(1.0, otherRobotProximityThresh), robotHalfWidthClearance + collisionCircleRadius) << endl;
+  coutWithName << "Collide: " <<  obstacle_in_robot_path(coordinate(0, 0), coordinate(0, 0.8), coordinate(1, 0), min(1.0, otherRobotProximityThresh), robotHalfWidthClearance + collisionCircleRadius) << endl;
+
   while (robot->step(timeStep) != -1) {
     message* receivedData = receiveData(receiver);
     if (receivedData) {
@@ -166,6 +169,11 @@ bool emergencyChecker(void* emergencyParams) {
       case(99):
         cout << "Robot" << robotColour << ": Something bad has happened" << endl;
         timeDelay(5, bypassEmergencyChecker);
+        return false;
+        break;
+      case(98):
+        coutWithName << "Stopping for other robot" << endl;
+        timeDelay(10000, bypassEmergencyChecker);
         return false;
         break;
       }

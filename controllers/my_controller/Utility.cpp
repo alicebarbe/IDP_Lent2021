@@ -88,7 +88,7 @@ bool obstacle_in_robot_path(coordinate robot_pos, coordinate obstacle_pos, coord
   if (distance_parallel_to_path > 0 && distance_parallel_to_path < target_distance) {
     //only consider blocks infront of the robots path
     // using cross product - positive is in clockwise rotation from path
-    double distance_perp_to_path = displacement_from_robot.z * obstacle_pos.x - displacement_from_robot.x * obstacle_pos.z;
+    double distance_perp_to_path = displacement_from_robot.z * path_vector.x - displacement_from_robot.x * path_vector.z;
     if (abs(distance_perp_to_path) < clearance) {
       cout << "Collision with obstacle at " << obstacle_pos << endl;
       return true;
