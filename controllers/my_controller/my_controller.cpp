@@ -74,8 +74,7 @@ coordinate otherRobotDestination; // where the other robot is headed
 
 int main(int argc, char** argv) {
   // get the time step of the current world.
-  
-  timeDelay(5, emergencyChecker);
+    timeDelay(5, emergencyChecker);
 
   // identify what colour robot 
 
@@ -96,14 +95,8 @@ int main(int argc, char** argv) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
-            if(((int)get<1>(*receivedData) != 4) && ((int)get<2>(*receivedData) != 4)){
-                turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
-                targetPoints = scanForBlocks(0, emergencyChecker);
-            }           
-            else if ((((int)get<1>(*receivedData) == 4) && robotColour == RED_ROBOT) || (((int)get<2>(*receivedData) == 4) && robotColour == GREEN_ROBOT)) {
-                turnToBearing((robotColour == RED_ROBOT) ? 285 : 105, emergencyChecker);
-                targetPoints = scanForBlocks(1, emergencyChecker);
-            }
+          turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
+          targetPoints = scanForBlocks(0, emergencyChecker);
           sendRobotLocation(gps, robotColour, emitter);
           sendBlockPositions(targetPoints);
           sendFinishedScan(robotColour, emitter);
@@ -261,7 +254,7 @@ vector<coordinate> scanForBlocks(bool scanning_whole_arena, bool (*emergencyFunc
   const double wallSeparationThresh = 0.08;   // detect blocks if they are this far from the wall
   double angleToRotate = 0;
   if (!scanning_whole_arena) angleToRotate = 200;
-  else angleToRotate = 330;
+  else angleToRotate = 360;
 
   int i = 0;
 
@@ -584,6 +577,10 @@ bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* e
       double blockBearing = (i == -searchAngle) ? bearing : bearing + (BLOCK_SIZE * RAD_TO_DEG / distance) / 2;
       coordinate newBlockPos = getBlockPositionFromAngleAndDistance(robotPos, distance, blockBearing);
       nextTarget = getPositionAroundBlock(newBlockPos, robotPos, frontOfRobotDisplacement);
+      if (nextTarget.x > 1.03) nextTarget.x = 1.03;
+      if (nextTarget.x < -1.03) nextTarget.x = -1.03;
+      if (nextTarget.z > 1.03) nextTarget.z = 1.03;
+      if (nextTarget.z < -1.03) nextTarget.z = -1.03;
       cout << "NextTarget: " << nextTarget << endl;
       return true;
     }

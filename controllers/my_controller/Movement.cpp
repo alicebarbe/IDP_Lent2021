@@ -76,14 +76,18 @@ bool tweakTargetDistanceFromMeasurement(coordinate robotPosition, const double* 
   coordinate displacementFromDistanceSensor = targetPosition - robotPosition - rotatedSensorDisp;
 
   double expectedDist = getExpectedDistanceOfBlock(robotPosition, currentBearingVector);
-  if (abs(distance - expectedDist) > lostThreshold) {
+  if ((abs(distance - expectedDist) > lostThreshold) || (abs(robotPosition.x) > 1.03 && distance > 0.04) || (abs(robotPosition.z) > 1.03 && distance > 0.04)) {
     // provision if block is so far from where it should be that the block is gone
     return false;
   }
   double averagedDist = expectedDist * (1 - distanceMeasurementWeight) + distance * distanceMeasurementWeight;
 
   targetPosition.x += (distance - frontOfRobotDisplacement.x - expectedDist) * -currentBearingVector[0] * distanceMeasurementWeight;
+  if (targetPosition.x > 1.03) targetPosition.x = 1.03;
+  if (targetPosition.x < -1.03) targetPosition.x = -1.03;
   targetPosition.z += (distance - frontOfRobotDisplacement.z - expectedDist) * currentBearingVector[2] * distanceMeasurementWeight;
+  if (targetPosition.z > 1.03) targetPosition.z = 1.03;
+  if (targetPosition.z < -1.03) targetPosition.z = -1.03;
   return true;
 }
 

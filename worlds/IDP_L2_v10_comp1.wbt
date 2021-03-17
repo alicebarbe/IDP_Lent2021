@@ -58,7 +58,7 @@ target {
   name "target(1)"
 }
 target {
-  translation -0.5205 0.05 0.7057
+  translation -0.7505 0.05 0.7057
   colour 0 1 0
   name "target(2)"
 }
