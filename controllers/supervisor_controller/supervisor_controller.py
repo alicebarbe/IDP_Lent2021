@@ -29,7 +29,7 @@ steady_state_thresh = 0.05 # m
 max_sim_time = 180 # s  stop if robots dont reach steady state by this time
 
 DATA_SAVE_DIR = "./Data/Test/"
-NUM_SIMULATIONS = 50
+NUM_SIMULATIONS = 20
 # ===
 
 supervisor = Supervisor()
