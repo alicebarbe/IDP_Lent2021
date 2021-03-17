@@ -1,0 +1,2 @@
+C:\Users\Daniel\Documents\CambridgeSoftwareProjects\IDP_Lent2021\controllers\server_controller\PathFinder\Debug\testPathFinder.exe
+C:\Users\Daniel\Documents\CambridgeSoftwareProjects\IDP_Lent2021\controllers\server_controller\PathFinder\Debug\testPathFinder.pdb

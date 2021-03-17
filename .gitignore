@@ -5,6 +5,7 @@
 build
 com
 webots_catkin_ws
+x64
 
 # Compiled source
 *.exe
@@ -20,6 +21,14 @@ webots_catkin_ws
 *.hex
 *.pyc
 *.gch
+
+# Incremental Link-Time Code Generation
+*.ipdb
+*.pdb
+*.iobj
+*.obj
+*.tlog
+
 
 # Packages
 *.7z
@@ -55,6 +64,7 @@ Thumbs.db
 
 # Webots generated files
 *.cache
+*.wbproj
 
 # IDE files
 .vs
