@@ -51,6 +51,7 @@ bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* e
 void handleBlockLost();
 
 int blocks_collected = 0;
+bool isMovingToPosition = false;
 
 // Webots sensors/actuators
 Robot *robot = new Robot();
@@ -110,6 +111,9 @@ int main(int argc, char** argv) {
           if (moveToPosition(blockPosition, true, emergencyChecker)) {
             dealwithblock(emergencyChecker);
           }
+          else {
+            sendDealtwithBlock(robotColour, emitter);
+          }
           break;
         }
         case(90): {
@@ -129,8 +133,10 @@ int main(int argc, char** argv) {
       }
       
       if (floor(get<0>(*receivedData) / 100) == (3 - robotColour)) {
+          // cout << "Robot " << robotColour << " From other robot : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
           if (get<0>(*receivedData) % 100 == 20) {
               otherRobotPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
+              cout << otherRobotPosition << endl;
           }
       }
     }
@@ -150,7 +156,7 @@ bool emergencyChecker(void* emergencyParams) {
   // return false to resume the last action, 
   // return true to cancel out of the last action - 
   // Note that some blocking actions call others therefore 
-  // exiting out does not always take you to the very top - this should likely be changed
+  // exiting out does not always take you to the very top - this should likely be change
 
   static int emergencyCounter = 0; // to avoid polling position every single time
   message* receivedData = receiveData(receiver);
@@ -166,6 +172,7 @@ bool emergencyChecker(void* emergencyParams) {
     }
     if (floor(get<0>(*receivedData) / 100) == (3 - robotColour)) {
       if (get<0>(*receivedData) % 100 == 20) {
+        //coutWithName << "Updating other robot position" << endl;
         otherRobotPosition = coordinate(get<1>(*receivedData), get<2>(*receivedData));
       }
       if (get<0>(*receivedData) % 100 == 25) {
@@ -176,6 +183,7 @@ bool emergencyChecker(void* emergencyParams) {
 
   // make green robot stop if the red robot is too close
   if (emergencyCounter >= emergencyCounterMax) {
+    //coutWithName << "Running emergency checker" << endl;
     emergencyCounter = 0;
     //cout << robotColour << ": Checking distances" << endl;
     sendRobotLocation(gps, robotColour, emitter);
@@ -208,6 +216,17 @@ bool emergencyChecker(void* emergencyParams) {
             //cout << "Finished delay" << endl;
             emergencyCounter = emergencyCounterMax; // go straight back to checking if personal space is still violated
         }
+    }
+
+    if (isMovingToPosition) {
+      const double* compassVector = getDirection(compass);
+      coordinate bearingVector(-compassVector[0], compassVector[2]);
+      double target_distance = (getTargetPosition() - currentRobotPosition).x * bearingVector.x + (getTargetPosition() - currentRobotPosition).z * bearingVector.z + forewardMostRobotPointDist;
+      if (obstacle_in_robot_path(currentRobotPosition, otherRobotPosition, bearingVector, min(target_distance, otherRobotProximityThresh), robotHalfWidthClearance + collisionCircleRadius)) {
+        coutWithName << "other robot incoming! " << endl;
+        sendRobotCollisionMessage(robotColour, emitter);
+        return true;
+      }
     }
 
     // make green robot turn away if red robot is going to run it over
@@ -417,7 +436,8 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
           }
         }
         if (emergencyChecker(emergencyParams)) {
-            break;
+          setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+          break;
         };
         if (blockLost) {
           handleBlockLost();
@@ -426,6 +446,7 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
 }
 
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams) {
+  isMovingToPosition = true;
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = blockPosition;
   if (positionIsBlock) {
@@ -481,6 +502,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     }
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
+      coutWithName << "Reached end position" << endl;
       return true;
     }
     if (blockLost) {
@@ -488,6 +510,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
       return false;
     }
   }
+  isMovingToPosition = false;
 }
 
 void turnToBearing(double bearing, bool (*emergencyFunc)(void*), void* emergencyParams) {

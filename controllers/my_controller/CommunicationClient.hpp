@@ -26,3 +26,4 @@ void sendBlockLocation(coordinate blockPos, int robotIdentifier, webots::Emitter
 void sendFinishedScan(int robotIdentifier, webots::Emitter* emitter);
 void sendBlockColour(int robotIdentifier, webots::Emitter* emitter, int colour, coordinate newBlockPosition);
 void sendDealtwithBlock(int robotIdentifier, webots::Emitter* emitter);
+void sendRobotCollisionMessage(int robotIdentifier, webots::Emitter* emitter);

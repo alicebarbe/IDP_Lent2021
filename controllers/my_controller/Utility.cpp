@@ -79,3 +79,20 @@ double distanceToTrajectory(coordinate currentPos, coordinate trajectoryPos1, co
     double dotProduct = trajectoryVector.x * currentVector.x + trajectoryVector.z * currentVector.z;
     return sqrt(pow(currentToPos1, 2) - pow(dotProduct, 2));
 }
+
+bool obstacle_in_robot_path(coordinate robot_pos, coordinate obstacle_pos, coordinate path_vector, double target_distance, double clearance) {
+  coordinate perp_path_bearing_vector(-path_vector.z, path_vector.x);
+
+  coordinate displacement_from_robot = obstacle_pos - robot_pos;
+  double distance_parallel_to_path = displacement_from_robot.x * path_vector.x + displacement_from_robot.z * path_vector.z;
+  if (distance_parallel_to_path > 0 && distance_parallel_to_path < target_distance) {
+    //only consider blocks infront of the robots path
+    // using cross product - positive is in clockwise rotation from path
+    double distance_perp_to_path = displacement_from_robot.z * obstacle_pos.x - displacement_from_robot.x * obstacle_pos.z;
+    if (abs(distance_perp_to_path) < clearance) {
+      cout << "Collision with obstacle at " << obstacle_pos << endl;
+      return true;
+    }
+  }
+  return false;
+}
