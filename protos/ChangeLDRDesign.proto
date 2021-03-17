@@ -1,7 +1,19 @@
+#VRML_SIM R2021a utf8
+# license: Apache License 2.0
+# license url: http://www.apache.org/licenses/LICENSE-2.0
+# This is a proto file for Webots for the RobotAssembly
+# Extracted from: RobotAssembly.urdf
+
 PROTO ChangeLDRDesign [
   field  SFVec3f     translation     0 0 0
   field  SFRotation  rotation        1 0 0 -1.5708
- 
+  #field  SFString    name            "ChangedLDRDesign"  # Is `Robot.name`.
+  #field  SFString    controller      "my_controller"            # Is `Robot.controller`.
+  #field  MFString    controllerArgs  []                # Is `Robot.controllerArgs`.
+  #field  SFString    customData      ""                # Is `Robot.customData`.
+  #field  SFBool      supervisor      FALSE             # Is `Robot.supervisor`.
+  #field  SFBool      synchronization TRUE              # Is `Robot.synchronization`.
+  #field  SFBool      selfCollision   FALSE             # Is `Robot.selfCollision`.
 ]
 {
 Robot {
@@ -12,8 +24,12 @@ Robot {
       translation -0.03 0 0.03
       children [
         DEF battery Shape {
+          appearance DEF darkYellow PBRAppearance {
+            baseColor 0.91 0.63 0.05
+            metalness 0.8
+          }
           geometry Box {
-            size 0.05 0.05 0.03
+            size 0.1 0.05 0.03
           }
         }
       ]
@@ -119,8 +135,8 @@ Robot {
       }
     }
     Shape {
-      appearance DEF silver PBRAppearance {
-        baseColor 0.5 0.5 0.5
+      appearance DEF wood PBRAppearance {
+        baseColor 0.4, 0.2, 0
         roughness 1
         metalness 0
       }
@@ -155,10 +171,17 @@ Robot {
         rotation 0 -1 0 0
         children [
           DEF wheel1 Shape {
-            geometry Cylinder {
-              height 0.0217
-              radius 0.0506
-            }
+            appearance DEF silver PBRAppearance {
+            baseColor 0.400000 0.400000 0.400000
+            transparency 0.000000
+            roughness 1.000000
+            metalness 1
+            emissiveColor 0.000000 0.000000 0.000000
+          }
+          geometry Cylinder {
+            height 0.0217
+            radius 0.0506
+          }
           }
         ]
         boundingObject USE wheel1
@@ -185,6 +208,7 @@ Robot {
         rotation 0 -1 0 0
         children [
           DEF wheel2 Shape {
+            appearance USE silver
             geometry Cylinder {
               height 0.0217
               radius 0.0506
@@ -204,8 +228,7 @@ Robot {
           translation -0.160065 -0.066233 -0.017971
           children [
             Shape {
-              appearance PBRAppearance {
-              }
+              appearance USE silver
               geometry DEF servo_motor_trap_1 IndexedFaceSet {
                 coord Coordinate {
                   point [
@@ -283,7 +306,8 @@ Robot {
                   }
                   DEF board Shape {
                     appearance PBRAppearance {
-                      metalness 0
+                      baseColor 0 0.7 0
+                      metalness 1
                     }
                     geometry Box {
                       size 0.0047 0.03 0.055
@@ -378,8 +402,7 @@ Robot {
           translation -0.160065 0.033767 -0.017971
           children [
             Shape {
-              appearance PBRAppearance {
-              }
+              appearance USE silver 
               geometry DEF servo_motor_flipper_1 IndexedFaceSet {
                 coord Coordinate {
                   point [
@@ -416,9 +439,7 @@ Robot {
                 translation -0.170065 0.053767 -0.017971
                 children [
                   Shape {
-                    appearance PBRAppearance {
-                      baseColor 0.2 0.5 1
-                    }
+                    appearance USE silver
                     geometry DEF flipper_1 IndexedFaceSet {
                       coord Coordinate {
                         point [
