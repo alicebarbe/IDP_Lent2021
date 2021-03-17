@@ -20,31 +20,35 @@
 using namespace webots;
 using namespace std;
 
-typedef tuple<int, double, double> message;
 typedef tuple<double, double> coord;
 typedef tuple<double, double, double, int> distance_coordinate_and_colour;
 typedef vector<distance_coordinate_and_colour> coordinate_and_distance_list;
 
-Emitter* initEmitter(Robot* server, const char* name);
-Receiver* initReceiver(Robot* server, const char* name);
-void emitData(Emitter* emitter, const void* data, int size);
-message* receiveData(webots::Receiver* receiver);
-void tell_robot_scan(int robot_identifier);
 void add_block_to_list(double x_coordinate, double z_coordinate, int colour);
 bool pathfind(int robot_identifier);
 double distance_from_robot(int robot_identifier, double x_coordinate, double z_coordinate);
-void tell_robot_go_to_block(int robot_identifier, coordinate position);
-void tell_robot_go_to_position(int robot_identifier, coordinate position);
-void tell_robot_go_home(int robot_identifier);
 bool tell_robot_go_to_next_path_position(int robot_identifier);
-void tell_robot_stop(int robot_identifier);
-void tell_robot_start_again(int robot_identifier);
-void send_emergency_message(int robot_identifier);
 vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_position, int robot_identifier, bool robot_is_in_way = false);
 bool straight_path_is_clear(coordinate robot_pos, coordinate block_pos, int robot_identifier);
 tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double distanceFromWallThresh, double targetOffset);
 vector<coordinate> a_star_block_avoid(vector<distance_coordinate_and_colour> block_list, coordinate target_block, coordinate robot_pos, bool target_is_block, int robot_identifier = 0, bool robot_collision = false);
 bool obstacle_in_path(coordinate robot_pos, coordinate obstacle_pos, coordinate path_vector, double target_distance, double clearance);
+void set_robot_avoiding_collision(int robot_identifier, vector<coordinate> path);
+void handle_robot_collision(int robot_identifier);
+
+typedef std::tuple<int, double, double> message;
+
+webots::Emitter* initEmitter(webots::Robot* server, const char* name);
+webots::Receiver* initReceiver(webots::Robot* server, const char* name);
+void emitData(webots::Emitter* emitter, const void* data, int size);
+message* receiveData(webots::Receiver* receiver);
+void tell_robot_scan(int robot_identifier);
+void tell_robot_stop(int robot_identifier);
+void tell_robot_start_again(int robot_identifier);
+void send_emergency_message(int robot_identifier);
+void tell_robot_go_to_block(int robot_identifier, coordinate position);
+void tell_robot_go_to_position(int robot_identifier, coordinate position);
+void tell_robot_go_home(int robot_identifier);
 
 Robot* server = new Robot();
 Receiver* receiver = initReceiver(server, "receiver");
@@ -107,8 +111,8 @@ int main(int argc, char** argv) {
 
 			case(125):green_destination = coord(get<1>(*received_data), get<2>(*received_data)); break;	//update destination of green robot
 			case(225):red_destination = coord(get<1>(*received_data), get<2>(*received_data)); break;
-			case(129):tell_robot_stop(2); green_robot_path = find_path_to_block(green_target_block, green_position, 1, true); robot_navigating_collision = 1; robot_paused_collision = 2;  break; // the green robot is going to get in the way of the red robot
-			case(229):tell_robot_stop(1); red_robot_path = find_path_to_block(red_target_block, red_position, 2, true); robot_navigating_collision = 2; robot_paused_collision = 1;   break; // the red robot is going to get in the way of the green robot
+			case(129): handle_robot_collision(1); break; // the green robot is going to get in the way of the red robot
+			case(229): handle_robot_collision(2); break; // the red robot is going to get in the way of the green robot
 
 			case(130):green_blocks_collected++; break;															//green robot has found a green block, Good!
 			case(140):add_block_to_list(get<1>(*received_data), get<2>(*received_data), 2);					//green robot has found a red block, update colour 
@@ -198,38 +202,6 @@ int main(int argc, char** argv) {
 	delete server;
 	return 0;
 	
-}
-
-Receiver* initReceiver(Robot* robot, const char* name) {
-	Receiver* receiver = robot->getReceiver(name);
-	receiver->enable(robot->getBasicTimeStep());
-	return receiver;
-}
-
-Emitter* initEmitter(Robot* robot, const char* name) {
-	Emitter* emitter = robot->getEmitter(name);
-	return emitter;
-}
-
-void emitData(Emitter* emitter, const void* data, int size) {
-	emitter->send(data, size);
-	return;
-}
-
-message* receiveData(Receiver* receiver) {
-	if (receiver->getQueueLength() > 0) {					//if there is a message in receive buffer
-		message* received_data = (message*) receiver->getData();		//get the message		
-		receiver->nextPacket();									//move onto next message in queue	
-		return received_data;
-	}
-	else return 0;
-
-}
-
-void tell_robot_scan(int robot_identifier) {							//outputs a message telling the green robot to scan for blocks
-	message scan_message{};
-	scan_message = { robot_identifier * 100 + 80, green_blocks_collected, red_blocks_collected };
-	emitData(emitter, (const void*) &scan_message, 20);	
 }
 
 void add_block_to_list(double x_coordinate, double z_coordinate, int colour) {			//0 is unknown colouor, 1 is green,  red is 2
@@ -325,51 +297,6 @@ double distance_from_robot(int robot_identifier, double x_coordinate, double z_c
 	}
 }
 
-void tell_robot_go_home(int robot_identifier) {
-	if (robot_identifier == 1)
-	{
-		message go_home_message{};
-		go_home_message = { 190, 0.004, -0.47 };														//send next target green home
-		emitData(emitter, (const void*)&go_home_message, 20);
-		robot_is_home[0] = 1;
-		
-	}
-	else if (robot_identifier == 2)
-	{
-		message go_home_message{};
-		go_home_message = { 290, -0.004, 0.47 };														//send next target green home
-		emitData(emitter, (const void*)&go_home_message, 20);
-		robot_is_home[1] = 1;
-		
-	}
-}
-
-void tell_robot_go_to_block(int robot_identifier, coordinate position) {
-	message go_to_position_message(robot_identifier * 100, position.x, position.z);
-	emitData(emitter, (const void*)&go_to_position_message, 20);
-}
-
-void tell_robot_go_to_position(int robot_identifier, coordinate position) {
-	message go_to_position_message(robot_identifier * 100 + 90, position.x, position.z);
-	emitData(emitter, (const void*) &go_to_position_message, 20);
-}
-
-void send_emergency_message(int robot_identifier) {
-	message new_target_message = message( 99 + robot_identifier * 100, 0, -0.4 );														//send next target green home
-	emitData(emitter, (const void*) &new_target_message, 20);
-}
-
-void tell_robot_stop(int robot_identifier) {
-	message stop_message = message(98 + robot_identifier * 100, 0, 0);														//send next target green home
-	emitData(emitter, (const void*)&stop_message, 20);
-}
-
-void tell_robot_start_again(int robot_identifier) {
-	message start_message = message(97 + robot_identifier * 100, 0, 0);														//send next target green home
-	emitData(emitter, (const void*)&start_message, 20);
-}
-
-
 vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_position, int robot_identifier, bool robot_is_in_way) {
 	vector<coordinate> path;
 	coordinate target;
@@ -389,9 +316,6 @@ vector<coordinate> find_path_to_block(coordinate target_block, coordinate robot_
 			cout << "No A* solution found, ramming through" << endl;
 			//ram through
 			if (robot_is_in_way) {
-				coordinate path_bearing_vector = (target_block - robot_position).norm();
-				path.push_back(robot_position - path_bearing_vector * 0.2); // reverse 0.2m
-				path.push_back(robot_position);
 				return path;
 			}
 			path.push_back(target);
@@ -557,4 +481,112 @@ tuple<bool, coordinate> offsetPointAwayFromWall(coordinate blockPos, double dist
 		isViaPoint = true;
 	}
 	return tuple<bool, coordinate>(isViaPoint, offsetPoint);
+}
+
+void handle_robot_collision(int robot_identifier) {
+	tell_robot_stop(3 - robot_identifier); 
+	vector<coordinate> possible_green_path;
+	vector<coordinate> possible_red_path;
+
+	if (green_going_to_target_block) {
+		possible_green_path = find_path_to_block(green_target_block, green_position, 1, true);
+	}
+	if (red_going_to_target_block) {
+		possible_red_path = find_path_to_block(red_target_block, red_position, 2, true);
+	}
+
+	if (possible_green_path.size() > 0 && distanceBetweenPoints(red_position, green_target_block) < otherRobotProximityThresh) {
+		set_robot_avoiding_collision(1, possible_green_path);
+	}
+	else if (possible_red_path.size() > 0 && distanceBetweenPoints(green_position, red_target_block) < otherRobotProximityThresh) {
+		set_robot_avoiding_collision(2, possible_red_path);
+	}
+	else {
+		//send one robot elsewhere
+	}
+}
+
+void set_robot_avoiding_collision(int robot_identifier, vector<coordinate> path) {
+	if (robot_identifier == 1) green_robot_path = path;
+	else if (robot_identifier == 2) red_robot_path = path;
+	robot_navigating_collision = robot_identifier;
+	robot_paused_collision = 3-robot_identifier;
+}
+
+/* Communication functions */
+
+Receiver* initReceiver(Robot* robot, const char* name) {
+	Receiver* receiver = robot->getReceiver(name);
+	receiver->enable(robot->getBasicTimeStep());
+	return receiver;
+}
+
+Emitter* initEmitter(Robot* robot, const char* name) {
+	Emitter* emitter = robot->getEmitter(name);
+	return emitter;
+}
+
+void emitData(Emitter* emitter, const void* data, int size) {
+	emitter->send(data, size);
+	return;
+}
+
+message* receiveData(Receiver* receiver) {
+	if (receiver->getQueueLength() > 0) {					//if there is a message in receive buffer
+		message* received_data = (message*)receiver->getData();		//get the message		
+		receiver->nextPacket();									//move onto next message in queue	
+		return received_data;
+	}
+	else return 0;
+
+}
+
+void tell_robot_scan(int robot_identifier) {							//outputs a message telling the green robot to scan for blocks
+	message scan_message{};
+	scan_message = { robot_identifier * 100 + 80, green_blocks_collected, red_blocks_collected };
+	emitData(emitter, (const void*)&scan_message, 20);
+}
+
+void tell_robot_go_home(int robot_identifier) {
+	if (robot_identifier == 1)
+	{
+		message go_home_message{};
+		go_home_message = { 190, 0.004, -0.47 };														//send next target green home
+		emitData(emitter, (const void*)&go_home_message, 20);
+		robot_is_home[0] = 1;
+
+	}
+	else if (robot_identifier == 2)
+	{
+		message go_home_message{};
+		go_home_message = { 290, -0.004, 0.47 };														//send next target green home
+		emitData(emitter, (const void*)&go_home_message, 20);
+		robot_is_home[1] = 1;
+
+	}
+}
+
+void tell_robot_go_to_block(int robot_identifier, coordinate position) {
+	message go_to_position_message(robot_identifier * 100, position.x, position.z);
+	emitData(emitter, (const void*)&go_to_position_message, 20);
+}
+
+void tell_robot_go_to_position(int robot_identifier, coordinate position) {
+	message go_to_position_message(robot_identifier * 100 + 90, position.x, position.z);
+	emitData(emitter, (const void*)&go_to_position_message, 20);
+}
+
+void send_emergency_message(int robot_identifier) {
+	message new_target_message = message(99 + robot_identifier * 100, 0, -0.4);														//send next target green home
+	emitData(emitter, (const void*)&new_target_message, 20);
+}
+
+void tell_robot_stop(int robot_identifier) {
+	message stop_message = message(98 + robot_identifier * 100, 0, 0);														//send next target green home
+	emitData(emitter, (const void*)&stop_message, 20);
+}
+
+void tell_robot_start_again(int robot_identifier) {
+	message start_message = message(97 + robot_identifier * 100, 0, 0);														//send next target green home
+	emitData(emitter, (const void*)&start_message, 20);
 }

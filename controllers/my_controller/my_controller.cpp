@@ -556,13 +556,15 @@ void timeDelay(int delayLength, bool (*emergencyFunc)(void*), void* emergencyPar
 }
 
 void waitUntilCollisionEventFinished() {
-  while (robot->step(timeStep) != -1) {
+  bool keepWaiting = true;
+  while (robot->step(timeStep) != -1 && keepWaiting) {
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       if (floor(get<0>(*receivedData) / 100) == robotColour) {
         switch (get<0>(*receivedData) % 100) {
         case(97):
           coutWithName << "Starting again, collision finished" << endl;
+          keepWaiting = false;
           break;
         }
       }
