@@ -546,6 +546,10 @@ bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* e
       double blockBearing = (i == -searchAngle) ? bearing : bearing + (BLOCK_SIZE * RAD_TO_DEG / distance) / 2;
       coordinate newBlockPos = getBlockPositionFromAngleAndDistance(robotPos, distance, blockBearing);
       nextTarget = getPositionAroundBlock(newBlockPos, robotPos, frontOfRobotDisplacement);
+      if (nextTarget.x > 1.03) nextTarget.x = 1.03;
+      if (nextTarget.x < -1.03) nextTarget.x = -1.03;
+      if (nextTarget.z > 1.03) nextTarget.z = 1.03;
+      if (nextTarget.z < -1.03) nextTarget.z = -1.03;
       cout << "NextTarget: " << nextTarget << endl;
       return true;
     }
