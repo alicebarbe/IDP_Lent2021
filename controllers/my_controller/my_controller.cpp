@@ -104,6 +104,12 @@ int main(int argc, char** argv) {
         cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
+            if (robotColour == 1) {
+                moveToPosition(coordinate(0, -0.4), false, emergencyChecker);
+            }
+            else if (robotColour == 2) {
+                moveToPosition(coordinate(0, 0.4), false, emergencyChecker);
+          }
           turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
           targetPoints = scanForBlocks(0, emergencyChecker);
           sendRobotLocation(gps, robotColour, emitter);

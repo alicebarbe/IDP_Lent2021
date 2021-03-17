@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.09364963954915716 -0.9367848806946829 -0.33714067140314247 2.8173162980656574
-  position -1.0427224272120448 2.8961218693399964 -3.759367029816663
+  orientation 0.999888920555179 -0.011052696507678868 -0.009999222515191034 4.8122784491227835
+  position -0.02572645559520729 4.718463989124812 0.47316851884461003
 }
 Background {
   skyColor [
@@ -32,42 +32,42 @@ Floor {
   }
 }
 ChangeLDRDesign {
-  translation -6.21882e-08 0.0500015 0.39
-  rotation 0.5773509358554485 0.5773509358554485 0.5773489358556708 -2.094395307179586
+  translation -0.0300001 0.050002 0.41
+  rotation 1 3.69431e-07 -1.37151e-06 -1.5708053071795867
 }
 target {
-  translation -0.5242    0.0500   -0.1440
+  translation -0.5242 0.05 -0.144
   name "target(9)"
 }
 target {
-  translation -1.0665    0.0500   -0.2783
+  translation -1.0665 0.05 -0.2783
   name "target(8)"
 }
 target {
-  translation -0.9467    0.0500    0.6240
+  translation -0.9467 0.05 0.624
   name "target(7)"
 }
 target {
-  translation 0.7601    0.0500    0.6937
+  translation 0.7601 0.05 0.6937
   name "target(6)"
 }
 target {
-  translation 0.4578    0.0500   -0.7358
+  translation 0.4578 0.05 -0.7358
   colour 0 1 0
   name "target(5)"
 }
 target {
-  translation -0.4298    0.0500   -0.0241
+  translation -0.4298 0.05 -0.0241
   colour 0 1 0
   name "target(1)"
 }
 target {
-  translation 1.0580    0.0500   -0.1279
+  translation 1.058 0.05 -0.1279
   colour 0 1 0
   name "target(2)"
 }
 target {
-  translation -1.0941    0.0500    0.3438
+  translation -1.0941 0.05 0.3438
   colour 0 1 0
   name "target(3)"
 }
@@ -148,6 +148,6 @@ Laptop {
   translation 1.53 0.55 3.24
 }
 ChangeLDRDesign {
-  translation -3.34591e-08 0.0499988 -0.39
+  translation -2.23993e-13 0.0499992 -0.35
   rotation -0.5773509358554485 0.5773509358554485 0.5773489358556708 2.0944
 }
