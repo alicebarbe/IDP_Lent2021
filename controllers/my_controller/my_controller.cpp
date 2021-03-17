@@ -597,7 +597,7 @@ bool confirmBlockPosition() {
 bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* emergencyParams) {
   double startBearing = getCompassBearing(getDirection(compass));
   const double searchAngle = 3;
-  const double wallSeparationThresh = 0.03;
+  const double wallSeparationThresh = 0.08;
 
   for (int i = -searchAngle; i < searchAngle; i++) {
     turnToBearing(constrainBearing(startBearing + i), emergencyFunc, emergencyParams);

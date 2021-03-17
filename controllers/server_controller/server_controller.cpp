@@ -145,6 +145,7 @@ int main(int argc, char** argv) {
 					break;
 				}
 				if (!tell_robot_go_to_next_path_position(1)) {
+					tell_robot_start_again(robot_paused_collision);
 					cout << "Green reached its destination" << endl;
 					green_going_to_target_block = false;
 					if (green_blocks_collected != 4 && target_list.size()) {
@@ -160,7 +161,6 @@ int main(int argc, char** argv) {
 					if (robot_navigating_collision == 1) {
 						// in this case we have finished navigating the collision and can unpause the other robot
 						cout << "Un pausing robot " << robot_paused_collision << endl;
-						tell_robot_start_again(robot_paused_collision);
 						tell_robot_end_collision(robot_navigating_collision);
 						robot_paused_collision = 0;
 						robot_navigating_collision = 0;
@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
 				}
 				cout << "I am Red I have " << red_blocks_collected << "  blocks" << endl;
 				if (!tell_robot_go_to_next_path_position(2)) {
+					tell_robot_start_again(robot_paused_collision);
 					red_going_to_target_block = false;
 					if (red_blocks_collected != 4 && target_list.size()) {
 						if (pathfind(2)) {
@@ -188,7 +189,6 @@ int main(int argc, char** argv) {
 					}
 					if (robot_navigating_collision == 2) {
 						// in this case we have finished navigating the collision and can unpause the other robot
-						tell_robot_start_again(robot_paused_collision);
 						tell_robot_end_collision(robot_navigating_collision);
 						robot_paused_collision = 0;
 						robot_navigating_collision = 0;
