@@ -75,29 +75,34 @@ class TestUtility():
             z = self.start_square_offset_z
             while ((abs(x) < self.start_square_size/2) and
                    (abs(z - self.start_square_offset_z) < self.start_square_size/2 or abs(z + self.start_square_offset_z) < self.start_square_size/2)):
-                x = random.uniform(self.board[0] + wall_buffer, self.board[1] - wall_buffer)
-                z = random.uniform(self.board[2] + wall_buffer, self.board[3] - wall_buffer)
+                x = random.uniform(self.board[0] - wall_buffer, self.board[1] + wall_buffer)
+                z = random.uniform(self.board[2] - wall_buffer, self.board[3] + wall_buffer)
             trans_field.setSFVec3f([x, 0.04, z])
 
     def count_blocks_in_correct_square(self):
         red_blocks_returned = 0
         green_blocks_returned = 0
+        print("Counting blocks")
 
         for block in self.blocks:
             trans_field = block.getField("translation")
             colour_field = block.getField("colour")
             x, _, z = trans_field.getSFVec3f()
 
-        if ((abs(x) < self.start_square_size / 2) and
-               (abs(z - self.start_square_offset_z) < self.start_square_size / 2) and
-               colour_field.getSFColor()[0] == 1):
-            # red block in red start_square
-            red_blocks_returned += 1
+            print("block at x: {} z: {}".format(x, z))
 
-        elif ((abs(x) < self.start_square_size / 2) and
-               (abs(z + self.start_square_offset_z) < self.start_square_size / 2) and
-               colour_field.getSFVec3f()[0] == 1):
-            # red block in red start_square
-            green_blocks_returned += 1
+            if ((abs(x) < self.start_square_size / 2) and
+                   (abs(z - self.start_square_offset_z) < self.start_square_size / 2) and
+                   colour_field.getSFColor()[0] == 1):
+                # red block in red start_square
+                print("Red block returned")
+                red_blocks_returned += 1
+
+            elif ((abs(x) < self.start_square_size / 2) and
+                   (abs(z + self.start_square_offset_z) < self.start_square_size / 2) and
+                   colour_field.getSFColor()[1] == 1):
+                # green block in red start_square
+                print("Green block returned")
+                green_blocks_returned += 1
 
         return green_blocks_returned, red_blocks_returned

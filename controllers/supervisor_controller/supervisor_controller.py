@@ -26,10 +26,10 @@ block_size = 0.5
 
 steady_state_time = 10 # s
 steady_state_thresh = 0.05 # m
-max_sim_time = 180 # s  stop if robots dont reach steady state by this time
+max_sim_time = 300 # s  stop if robots dont reach steady state by this time
 
-DATA_SAVE_DIR = "./Data/Test/"
-NUM_SIMULATIONS = 20
+DATA_SAVE_DIR = "./Data/FinalTest/"
+NUM_SIMULATIONS = 100
 # ===
 
 supervisor = Supervisor()
