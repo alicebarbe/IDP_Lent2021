@@ -16,6 +16,7 @@
 #include <vector>
 #include <numeric>
 #include <cmath>
+#include <string>
 
 #include <webots/Robot.hpp>
 #include <webots/Motor.hpp>
@@ -30,12 +31,13 @@
 #include "Utility.hpp"
 #include "Coordinate.hpp"
 
-int robotColour;
-#define coutWithName cout << "I am " <<  robotColour << " and "
-
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
 using namespace std;
+
+int robotColour;
+string robotColourStr;
+#define coutWithName cout << "I am " <<  robotColourStr << " and "
 
 bool emergencyChecker(void* emergencyParams);
 bool bypassEmergencyChecker(void* emergencyParams);
@@ -84,8 +86,15 @@ int main(int argc, char** argv) {
   sayHello(robotColour, emitter);
   sendRobotLocation(gps, robotColour, emitter);
 
+  if (robotColour == 1) {
+      robotColourStr = "GREEN";
+  }
+  else if (robotColour) {
+      robotColourStr = "RED";
+  }
+
   while (robot->step(timeStep) != -1) {
-    coutWithName << "In main" << endl;
+    //coutWithName << "In main" << endl;
     message* receivedData = receiveData(receiver);
     if (receivedData) {
       vector<coordinate> targetPoints;
@@ -95,6 +104,12 @@ int main(int argc, char** argv) {
         // cout << "Robot " << robotColour << " : " << get<0>(*receivedData) << " , " << get<1>(*receivedData) << ", " << get<2>(*receivedData) << endl;
         switch (get<0>(*receivedData) % 100) {
         case(80):
+            if (robotColour == 1) {
+                moveToPosition(coordinate(0, -0.4), false, emergencyChecker);
+            }
+            else if (robotColour == 2) {
+                moveToPosition(coordinate(0, 0.4), false, emergencyChecker);
+          }
           turnToBearing((robotColour == RED_ROBOT) ? 60 : 240, emergencyChecker);
           targetPoints = scanForBlocks(0, emergencyChecker);
           sendRobotLocation(gps, robotColour, emitter);
@@ -114,7 +129,7 @@ int main(int argc, char** argv) {
         }
         case(90): {
             currentDestination = coordinate(get<1>(*receivedData), get<2>(*receivedData));
-            cout << "I am " << robotColour << " and my destination is : " << currentDestination << endl;
+            coutWithName << "my destination is : " << currentDestination << endl;
             //TO-DO: change the below to currentDestination instead?
             moveToPosition(currentDestination, false, emergencyChecker, NULL, false);
             // moveForward(frontOfRobotDisplacement.x, bypassEmergencyChecker);
@@ -123,7 +138,7 @@ int main(int argc, char** argv) {
             break;
         }
         case(99):
-          cout << "something bad has happened";
+          coutWithName << "something bad has happened";
           break;
         case(98):
           coutWithName << "Stopping for other robot" << endl;
@@ -168,18 +183,18 @@ bool emergencyChecker(void* emergencyParams) {
     if (floor(get<0>(*receivedData) / 100) == robotColour) {
       switch (get<0>(*receivedData) % 100) {
       case(99):
-        cout << "Robot" << robotColour << ": Something bad has happened" << endl;
+        coutWithName << "something bad has happened" << endl;
         timeDelay(5, bypassEmergencyChecker);
         return false;
         break;
       case(98):
-        coutWithName << "Stopping for other robot" << endl;
+        coutWithName << "stopping for other robot" << endl;
         setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
         waitUntilCollisionEventFinished();
         return false;
         break;
       case(96):
-        coutWithName << "Ending collision event" << endl;
+        coutWithName << "ending collision event" << endl;
         isAvoidingCollision = false;
       }
     }
@@ -198,38 +213,7 @@ bool emergencyChecker(void* emergencyParams) {
   if (emergencyCounter >= emergencyCounterMax) {
     //coutWithName << "Running emergency checker" << endl;
     emergencyCounter = 0;
-    //cout << robotColour << ": Checking distances" << endl;
-    sendRobotLocation(gps, robotColour, emitter);
-    sendRobotDestination(currentDestination, robotColour, emitter);
     coordinate currentRobotPosition = getLocation(gps);
-    /*
-    if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.8) {
-        // green robot is in the way of the red robot's trajectory, it needs to turn!
-        cout << robotColour << "OH NO robot should get out of robot's way!" << endl;
-    }*/
-    
-    if (distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) < 0.01) {
-        cout << robotColour << ": I'm going to get run over!" << endl;
-        if (robotColour == RED_ROBOT || robotColour == GREEN_ROBOT) {
-            // green robot is in the way of the red robot's trajectory, it needs to turn!
-            cout << robotColour << " is trying to get out of " << 3 - robotColour << "'s way!" << endl;
-            // I wish I could make it move for real but this will (not) do for now
-            moveForward(-0.3, false, bypassEmergencyChecker, emergencyParams);
-            cout << "robot" << robotColour << " tried its besht" << endl;
-            emergencyCounter = emergencyCounterMax;
-        }
-    }
-    
-    if (distanceBetweenPoints(currentRobotPosition, otherRobotPosition) < 0.01) {
-        cout << robotColour << ": yikes, the red robot's personal space has been violated!" << endl;
-        if (robotColour == GREEN_ROBOT) {
-            cout << "Green robot stops" << endl;
-            setMotorVelocity(motors, tuple<double, double>(0, 0));
-            timeDelay(emergencyCounterMax, bypassEmergencyChecker);
-            //cout << "Finished delay" << endl;
-            emergencyCounter = emergencyCounterMax; // go straight back to checking if personal space is still violated
-        }
-    }
 
     if (isMovingToPosition && !isAvoidingCollision) {
       const double* compassVector = getDirection(compass);
@@ -242,12 +226,6 @@ bool emergencyChecker(void* emergencyParams) {
         return true;
       }
     }
-
-    // make green robot turn away if red robot is going to run it over
-    //cout << robotColour << " is headed to " << currentDestination.x << " " << currentDestination.z << endl;
-    //cout << robotColour << " knows that the other robot is headed to " << otherRobotDestination.x << " " << otherRobotDestination.z << endl;
-    //sendRobotDestination(currentDestination, robotColour, emitter);
-    //cout << robotColour << " knows it's " << distanceToTrajectory(currentRobotPosition, otherRobotPosition, otherRobotDestination) << " away from trajectory" << endl;
   }
   emergencyCounter++;
 
@@ -350,8 +328,9 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
 
     for (char i = 0; i < 4; i++) {
     closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
-    openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);    
+    openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
         if (checkColour(colourSensor) == robotColour) {
+            coutWithName << "I have found a block of my colour!" << endl;
             if (getWallCollisionDistance(robotPos, bearing) < eatBlockDistance + 0.05) {
                 moveForward(-eatBlockDistance - 0.05, false, emergencyFunc, emergencyParams);
             }
@@ -361,7 +340,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
                 closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
                 cout << getDistanceMeasurement(ds1) << endl;
                 if (getDistanceMeasurement(ds1) <= distanceToFloorThresh) {
-                    cout << "I am " << robotColour << " and i have choked" << endl;
+                    coutWithName << "i have choked :(" << endl;
                     openTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
                     closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
                     moveForward(-eatBlockDistance - 0.05, false, emergencyFunc, emergencyParams);
@@ -374,12 +353,13 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
                 closeGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             }
             blocks_collected +=1;
-            cout << "I am  " << robotColour << "I think I have  " << blocks_collected << "  blocks" << endl;
+            coutWithName << "I think I have  " << blocks_collected << "  blocks" << endl;
             sendBlockColour(robotColour, emitter, robotColour, coordinate(0, 0));
             sendDebugMessage(robotColour, emitter, 75);
             break;
         }
         else if (checkColour(colourSensor) != 0) {
+            coutWithName << "I have found a block of the other colour!" << endl;
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             closeTrapDoor(trapdoorservo); timeDelay(15, emergencyFunc, emergencyParams);
             double bearing = getCompassBearing(getDirection(compass));
@@ -391,7 +371,7 @@ void dealwithblock(bool(*emergencyFunc)(void*), void* emergencyParams) {
             break;
         }
         else {
-            cout << "I am " << robotColour << "  I can't detect Colour" << endl;
+            coutWithName << "  I can't detect Colour" << endl;
             closeTrapDoor(trapdoorservo);
             openGripper(gripperservo); timeDelay(15, emergencyFunc, emergencyParams);
             moveForward(-0.1, false, emergencyFunc, emergencyParams);
@@ -434,7 +414,7 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
           double distance = getDistanceMeasurement(ds1);
           if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
             // TODO: check carefully that this works
-            cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
+            coutWithName << "I lost a block during tweaking" << endl;
             blockLost = true;
             coordinate relocatedTarget;
             // relocate by turning slightly
@@ -463,7 +443,7 @@ void moveForward(double distance, bool positionIsBlock, bool (*emergencyFunc)(vo
 }
 
 bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emergencyFunc)(void*), void* emergencyParams, bool canReverse) {
-  coutWithName << "In move to position" << endl;
+  coutWithName << "in move to position" << endl;
   isMovingToPosition = true;
   coordinate robotPos = getLocation(gps);
   coordinate nextTarget = blockPosition;
@@ -505,7 +485,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
       double distance = getDistanceMeasurement(ds1);
       if (!tweakTargetDistanceFromMeasurement(robotPos, bearing, distance, 0.2)) {
         //TODO: check carefully that this works
-        cout << "I am" << robotColour << " and I lost a block during tweaking" << endl;
+        coutWithName << "I lost a block during tweaking" << endl;
         blockLost = true;
         coordinate relocatedTarget;
         // relocate by turning slightly
@@ -525,7 +505,7 @@ bool moveToPosition(coordinate blockPosition, bool positionIsBlock, bool (*emerg
     }
     if (hasReachedPosition()) {
       setMotorVelocity(motors, tuple<double, double>(0.0, 0.0));
-      coutWithName << "Reached end position" << endl;
+      coutWithName << "reached end position" << endl;
       return true;
     }
     if (blockLost) {
@@ -612,7 +592,7 @@ bool confirmBlockPosition() {
   double expectedDistance = getExpectedDistanceOfBlock(robotPos, bearingVector);
 
   if (abs(distance - expectedDistance) > confirmBlockTolerance) {
-    cout << robotColour << " lost a block!" << endl;
+    coutWithName << "I lost a block!" << endl;
     return false;
   }
   return true;
@@ -631,7 +611,7 @@ bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* e
     double distance = getDistanceMeasurement(ds1);
     if (getWallDistance(robotPos, bearing) - distance > wallSeparationThresh) {
       // the block is here, but just at the wrong distance so we update the position and proceed (the block was found)
-      cout << "Attempting to relocate block" << endl;
+      coutWithName << "attempting to relocate block" << endl;
       //unless the block was found at the very left of the search angle in the first run, add on the block size to get the centre of the block
       double blockBearing = (i == -searchAngle) ? bearing : bearing + (BLOCK_SIZE * RAD_TO_DEG / distance) / 2;
       coordinate newBlockPos = getBlockPositionFromAngleAndDistance(robotPos, distance, blockBearing);
@@ -640,7 +620,7 @@ bool relocateBlock(coordinate& nextTarget, bool (*emergencyFunc)(void*), void* e
       if (nextTarget.x < -1.03) nextTarget.x = -1.03;
       if (nextTarget.z > 1.03) nextTarget.z = 1.03;
       if (nextTarget.z < -1.03) nextTarget.z = -1.03;
-      cout << "NextTarget: " << nextTarget << endl;
+      coutWithName << "my next target is  " << nextTarget << endl;
       return true;
     }
   }
